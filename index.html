@@ -3,25 +3,23 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-<meta name="theme-color" content="#090b10">
-<title>WebLinux | x86 Virtual Machine</title>
-
-<!-- v86: version-pinned npm CDN -->
-<script
-    defer
-    src="https://cdn.jsdelivr.net/npm/v86@0.5.473/build/libv86.js">
-</script>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0b0d12">
+<title>Browser Linux VM</title>
 
 <style>
 :root {
     color-scheme: dark;
-    --bg: #090b10;
-    --panel: #121923;
-    --border: #293343;
-    --green: #39d99b;
-    --muted: #8a99ad;
-    --text: #e8edf5;
+    --bg: #0b0d12;
+    --panel: #131720;
+    --panel2: #191f2b;
+    --border: #293142;
+    --text: #edf1f7;
+    --muted: #8994a7;
+    --accent: #78a9ff;
+    --green: #47d7a0;
+    --red: #ff7272;
+    --yellow: #f4c96b;
 }
 
 * {
@@ -30,583 +28,765 @@
 
 body {
     margin: 0;
+    padding: 20px;
     background: var(--bg);
     color: var(--text);
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    font-family:
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        sans-serif;
+}
+
+button,
+input,
+select {
+    font: inherit;
+}
+
+button {
+    cursor: pointer;
+}
+
+button:disabled,
+input:disabled {
+    opacity: .4;
+    cursor: not-allowed;
+}
+
+.app {
+    width: 100%;
+    max-width: 1150px;
+    margin: 0 auto;
 }
 
 header {
-    height: 64px;
-    padding: 0 20px;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    background: #10151d;
-    border-bottom: 1px solid var(--border);
+    gap: 16px;
+    margin-bottom: 22px;
 }
 
-.brand {
-    font-size: 18px;
+.eyebrow {
+    color: var(--accent);
+    font-size: 11px;
     font-weight: 750;
+    letter-spacing: .13em;
+    margin-bottom: 6px;
 }
 
-.brand span {
-    color: var(--green);
-}
-
-.version {
-    font: 11px monospace;
-    color: var(--muted);
-}
-
-main {
-    width: min(100%, 1050px);
-    margin: auto;
-    padding: 22px 14px;
-}
-
-.top {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 14px;
-}
-
-h2 {
-    font-size: 14px;
+h1 {
+    font-size: 24px;
     margin: 0;
+    letter-spacing: -.04em;
+}
+
+.subtitle {
+    color: var(--muted);
+    margin-top: 7px;
+    font-size: 13px;
 }
 
 .status {
-    display: flex;
+    display: inline-flex;
     align-items: center;
     gap: 8px;
-    font: 11px monospace;
+    padding: 9px 12px;
+    border: 1px solid var(--border);
+    border-radius: 999px;
     color: var(--muted);
+    font-size: 12px;
+    white-space: nowrap;
 }
 
-.dot {
+.status-dot {
     width: 8px;
     height: 8px;
+    background: #778195;
     border-radius: 50%;
-    background: #64748b;
 }
 
-.dot.running {
+.status-dot.good {
     background: var(--green);
-    box-shadow: 0 0 10px var(--green);
+    box-shadow: 0 0 10px #47d7a066;
 }
 
-.dot.error {
-    background: #ff5555;
+.status-dot.bad {
+    background: var(--red);
 }
 
-.terminal {
+.grid {
+    display: grid;
+    grid-template-columns: 340px minmax(0, 1fr);
+    gap: 16px;
+    align-items: start;
+}
+
+.panel {
+    background: var(--panel);
     border: 1px solid var(--border);
-    border-radius: 11px;
-    overflow: hidden;
-    background: #000;
+    border-radius: 15px;
+    padding: 17px;
+    min-width: 0;
 }
 
-.terminal-head {
-    height: 38px;
+.panel-title {
+    font-size: 13px;
+    font-weight: 750;
+    margin-bottom: 15px;
+}
+
+.field {
+    margin-bottom: 17px;
+}
+
+.field-label {
+    display: block;
+    font-size: 12px;
+    color: var(--muted);
+    margin-bottom: 8px;
+}
+
+.file-label,
+.button {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 42px;
+    padding: 0 14px;
+    border-radius: 9px;
+    border: 1px solid var(--border);
+    background: var(--panel2);
+    color: var(--text);
+    font-size: 12px;
+    font-weight: 700;
+    text-decoration: none;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+.file-label {
+    width: 100%;
+    overflow: hidden;
+}
+
+.file-label input[type="file"] {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    cursor: pointer;
+    font-size: 100px;
+}
+
+.file-label.disabled {
+    opacity: .4;
+    pointer-events: none;
+}
+
+.primary {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #101827;
+}
+
+.danger {
+    color: #ff9999;
+}
+
+.file-info {
+    margin-top: 9px;
+    padding: 10px;
+    background: #0d1119;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow-wrap: anywhere;
+}
+
+.file-name {
+    font-size: 12px;
+    font-weight: 650;
+}
+
+.file-meta {
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 5px;
+}
+
+select {
+    width: 100%;
+    height: 40px;
+    padding: 0 10px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--panel2);
+    color: var(--text);
+}
+
+.check-row {
     display: flex;
     align-items: center;
-    gap: 7px;
-    padding: 0 13px;
-    background: #171e29;
+    gap: 9px;
+    font-size: 12px;
+    color: var(--text);
+    margin-bottom: 10px;
 }
 
-.traffic {
-    width: 9px;
-    height: 9px;
-    border-radius: 50%;
+.check-row input {
+    accent-color: var(--accent);
+    width: 16px;
+    height: 16px;
 }
 
-.traffic:nth-child(1) { background: #ff6259; }
-.traffic:nth-child(2) { background: #ffbd44; }
-.traffic:nth-child(3) { background: #35c978; }
+.hint {
+    color: var(--muted);
+    font-size: 11px;
+    line-height: 1.65;
+    margin-top: 8px;
+}
 
-.terminal-title {
-    margin-left: 9px;
-    color: #9ba9bc;
-    font: 11px monospace;
+.button-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.button-row .button,
+.button-row button {
+    flex: 1;
+}
+
+.action-buttons {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+}
+
+.action-buttons button {
+    min-width: 0;
+}
+
+button.button {
+    appearance: none;
+}
+
+.screen-panel {
+    padding: 14px;
+}
+
+.screen-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 12px;
+}
+
+.screen-toolbar .panel-title {
+    margin: 0;
+}
+
+.screen-wrap {
+    position: relative;
+    min-height: 310px;
+    background: #000;
+    border: 1px solid #333b4a;
+    border-radius: 10px;
+    overflow: hidden;
 }
 
 #screen_container {
     width: 100%;
-    min-height: 420px;
-    padding: 8px;
-    overflow: auto;
+    min-height: 310px;
     outline: none;
+    overflow: auto;
     background: #000;
-    touch-action: manipulation;
+    color: #fff;
 }
 
-#screen_container div {
+#screen_container > div {
     white-space: pre;
     font: 14px monospace;
     line-height: 14px;
 }
 
 #screen_container canvas {
-    display: block;
+    display: none;
     max-width: 100%;
     height: auto;
+    image-rendering: pixelated;
 }
 
-.info {
-    color: var(--muted);
-    font: 11px monospace;
-    margin: 12px 1px;
-    overflow-wrap: anywhere;
-    min-height: 18px;
+.screen-placeholder {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 9px;
+    color: #778195;
+    font-size: 12px;
+    pointer-events: none;
+    text-align: center;
+    padding: 20px;
 }
 
-.grid {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 12px;
+.screen-placeholder.hidden {
+    display: none;
 }
 
-.card {
-    background: var(--panel);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 16px;
+.screen-placeholder .big {
+    font-size: 28px;
+    color: #4b566a;
+}
+
+.keyboard-form {
+    display: flex;
+    gap: 8px;
+    margin-top: 12px;
+}
+
+.keyboard-form input {
+    flex: 1;
     min-width: 0;
+    height: 42px;
+    padding: 0 12px;
+    background: #0d1119;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    outline: none;
 }
 
-.card h3 {
-    font-size: 13px;
-    margin: 0 0 8px;
+.keyboard-form input:focus {
+    border-color: var(--accent);
 }
 
-.card p {
+.log-panel {
+    margin-top: 16px;
+}
+
+#log {
+    margin: 0;
+    min-height: 90px;
+    max-height: 200px;
+    overflow: auto;
+    padding: 12px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: #090c12;
+    color: #aab6c8;
+    font: 11px/1.7 ui-monospace, monospace;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+}
+
+.footer {
+    margin-top: 17px;
     color: var(--muted);
     font-size: 11px;
     line-height: 1.7;
 }
 
-.file-label,
-button,
-select {
-    width: 100%;
-    min-height: 42px;
-    padding: 10px;
-    border-radius: 7px;
-    font-size: 12px;
-}
-
-.file-label {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    cursor: pointer;
-    background: #28374a;
-    color: #edf4ff;
-    font-weight: 700;
-    border: 0;
-}
-
-button {
-    border: 0;
-    background: var(--green);
-    color: #07140e;
-    font-weight: 750;
-    cursor: pointer;
-}
-
-button.secondary {
-    background: #28374a;
-    color: #edf4ff;
-}
-
-button:disabled,
-.file-label.disabled {
-    opacity: .35;
-    cursor: not-allowed;
-    pointer-events: none;
-}
-
-input[type=file] {
-    display: none;
-}
-
-.selected-file {
-    margin-top: 8px;
-    color: var(--green);
-    font: 11px monospace;
-    overflow-wrap: anywhere;
-}
-
-.actions {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 12px;
-    margin-top: 16px;
-}
-
-.notice {
-    margin-top: 16px;
-    padding: 14px;
-    background: #111720;
-    border: 1px solid var(--border);
-    border-radius: 9px;
-    color: var(--muted);
-    font-size: 11px;
-    line-height: 1.9;
-}
-
-.notice strong {
-    color: var(--text);
-}
-
-footer {
-    padding: 23px;
-    text-align: center;
-    color: #596579;
-    font-size: 10px;
-}
-
-@media(max-width: 650px) {
-    header {
-        padding: 0 13px;
+@media (max-width: 800px) {
+    body {
+        padding: 13px;
     }
 
-    main {
-        padding: 16px 10px;
-    }
-
-    .grid,
-    .actions {
+    .grid {
         grid-template-columns: 1fr;
     }
 
+    h1 {
+        font-size: 21px;
+    }
+
+    .screen-wrap,
     #screen_container {
-        min-height: 340px;
+        min-height: 260px;
+    }
+
+    header {
+        align-items: flex-start;
     }
 }
 </style>
 </head>
 
 <body>
+<div class="app">
 
 <header>
-    <div class="brand">Web<span>Linux</span></div>
-    <div class="version">V86 / X86 VIRTUAL MACHINE</div>
+    <div>
+        <div class="eyebrow">BROWSER VIRTUALIZATION</div>
+        <h1>Browser Linux VM</h1>
+        <div class="subtitle">Local ISO · x86 Emulator · Session Manager</div>
+    </div>
+
+    <div class="status">
+        <span id="statusDot" class="status-dot"></span>
+        <span id="statusText">Waiting for ISO</span>
+    </div>
 </header>
 
-<main>
+<div class="grid">
 
-    <div class="top">
-        <h2>Virtual Machine</h2>
+    <!-- LEFT: CONFIGURATION -->
+    <section class="panel">
 
-        <div class="status">
-            <span class="dot" id="dot"></span>
-            <span id="status">WAITING FOR ISO</span>
-        </div>
-    </div>
+        <div class="panel-title">01 / Boot Configuration</div>
 
-    <!-- Virtual display -->
-    <div class="terminal">
+        <div class="field">
+            <label class="field-label">Operating System ISO</label>
 
-        <div class="terminal-head">
-            <span class="traffic"></span>
-            <span class="traffic"></span>
-            <span class="traffic"></span>
-            <span class="terminal-title">WebLinux Console</span>
-        </div>
-
-        <div id="screen_container" tabindex="0">
-            <div style="white-space:pre;font:14px monospace;line-height:14px"></div>
-            <canvas style="display:none"></canvas>
-        </div>
-
-    </div>
-
-    <div class="info" id="message">
-        OS ISOを選択してください。
-    </div>
-
-    <!-- Media selection -->
-    <div class="grid">
-
-        <div class="card">
-            <h3>Boot Media / OS ISO</h3>
-
-            <p>
-                起動するOSのISOファイルを選択してください。
-                ISOはブラウザ内で読み込まれ、仮想CD-ROMに接続されます。
-            </p>
-
-            <label class="file-label" for="isoInput">
-                ＋ OSイメージを選択 (.iso)
+            <!--
+              実際の file input をラベル全体に重ねている。
+              JavaScript の input.click() に依存しない。
+            -->
+            <label class="file-label primary" id="isoLabel">
+                <span>Choose ISO file</span>
+                <input
+                    id="isoInput"
+                    type="file"
+                    accept="*/*"
+                    aria-label="Choose ISO file"
+                >
             </label>
 
-            <input
-                type="file"
-                id="isoInput"
-                accept=".iso,application/x-iso9660-image"
-            >
-
-            <div class="selected-file" id="isoName">
-                No ISO selected
+            <div class="file-info">
+                <div class="file-name" id="isoName">No ISO selected</div>
+                <div class="file-meta" id="isoMeta">
+                    Select an ISO image from your device.
+                </div>
             </div>
         </div>
 
-        <div class="card">
-            <h3>Hard Disk / Optional</h3>
+        <div class="field">
+            <label class="field-label" for="memorySize">RAM allocation</label>
+            <select id="memorySize">
+                <option value="128">128 MB</option>
+                <option value="256">256 MB</option>
+                <option value="512" selected>512 MB</option>
+                <option value="1024">1024 MB</option>
+            </select>
+            <div class="hint">
+                Larger values require more browser memory.
+            </div>
+        </div>
 
-            <p>
-                追加の仮想HDDイメージを選択します。
-                OSのインストール先などに使用できます。
-            </p>
+        <div class="field">
+            <label class="field-label" for="nicType">Virtual network adapter</label>
+            <select id="nicType">
+                <option value="virtio" selected>VirtIO — Modern Linux</option>
+                <option value="ne2k">NE2000 — Legacy OS</option>
+            </select>
+        </div>
 
-            <label class="file-label" for="diskInput">
-                ＋ HDDイメージを選択 (.img)
+        <div class="field">
+            <label class="check-row">
+                <input type="checkbox" id="networkEnabled" checked>
+                Enable internet networking
             </label>
-
-            <input
-                type="file"
-                id="diskInput"
-                accept=".img,.raw,.bin"
-            >
-
-            <div class="selected-file" id="diskName">
-                No HDD selected
+            <div class="hint">
+                Uses the public v86 WebSocket network relay.
+                Guest OS drivers and relay availability are required.
             </div>
         </div>
 
-    </div>
-
-    <!-- Hardware -->
-    <div class="card" style="margin-top:12px">
-
-        <h3>Virtual Hardware</h3>
-
-        <div class="grid">
-
-            <div>
-                <p>Memory Size</p>
-
-                <select id="ram">
-                    <option value="67108864">64 MB</option>
-                    <option value="134217728">128 MB</option>
-                    <option value="268435456" selected>256 MB</option>
-                    <option value="536870912">512 MB</option>
-                    <option value="1073741824">1024 MB</option>
-                </select>
-            </div>
-
-            <div>
-                <p>Network Adapter</p>
-
-                <select id="nic">
-                    <option value="virtio" selected>VirtIO</option>
-                    <option value="ne2k">NE2000</option>
-                    <option value="none">Disabled</option>
-                </select>
-            </div>
-
+        <div class="panel-title" style="margin-top:22px">
+            02 / VM Controls
         </div>
 
-        <button id="startButton" style="margin-top:14px" disabled>
-            ▶ 選択したOSを起動
-        </button>
+        <div class="action-buttons">
+            <button class="button primary" id="startButton" disabled>
+                Boot ISO
+            </button>
 
-    </div>
+            <button class="button" id="stopButton" disabled>
+                Stop
+            </button>
 
-    <!-- Actions -->
-    <div class="actions">
+            <button class="button" id="resetButton" disabled>
+                Restart
+            </button>
 
-        <div class="card">
-            <h3>Save State</h3>
-            <p>CPU・メモリ・仮想デバイスの状態を保存します。</p>
-
-            <button id="saveButton" disabled>
-                ↓ 状態を保存
+            <button class="button danger" id="destroyButton" disabled>
+                Destroy VM
             </button>
         </div>
 
-        <div class="card">
-            <h3>Restore State</h3>
-            <p>起動済みの同じ仮想マシンに保存状態を復元します。</p>
+        <div class="panel-title" style="margin-top:22px">
+            03 / Session
+        </div>
 
-            <label class="file-label" for="restoreInput">
-                ↑ 状態ファイルを選択
+        <div class="field">
+            <button class="button" id="saveButton" style="width:100%" disabled>
+                Save VM State
+            </button>
+            <div class="hint">
+                Downloads the current emulator state as a .bin file.
+            </div>
+        </div>
+
+        <div class="field">
+            <label class="file-label" id="restoreLabel">
+                <span>Restore VM State</span>
+                <input
+                    type="file"
+                    id="restoreInput"
+                    accept="*/*"
+                    disabled
+                    aria-label="Restore VM state"
+                >
             </label>
+            <div class="hint">
+                Start the same ISO with the same settings before restoring.
+            </div>
+        </div>
 
+    </section>
+
+    <!-- RIGHT: DISPLAY -->
+    <section class="panel screen-panel">
+
+        <div class="screen-toolbar">
+            <div class="panel-title">04 / Virtual Machine Display</div>
+            <button class="button" id="fullscreenButton" disabled>
+                Fullscreen
+            </button>
+        </div>
+
+        <div class="screen-wrap">
+
+            <!-- v86 が使う要素は div と canvas の2つ -->
+            <div id="screen_container" tabindex="0">
+                <div></div>
+                <canvas style="display:none"></canvas>
+            </div>
+
+            <div class="screen-placeholder" id="screenPlaceholder">
+                <div class="big">▣</div>
+                <div>Virtual machine is not running</div>
+                <div>Select an ISO and press Boot ISO.</div>
+            </div>
+
+        </div>
+
+        <form class="keyboard-form" id="keyboardForm">
             <input
-                type="file"
-                id="restoreInput"
-                accept=".bin,application/octet-stream"
+                id="keyboardInput"
+                type="text"
+                placeholder="Send text to the virtual machine..."
+                autocomplete="off"
                 disabled
             >
-        </div>
-
-        <div class="card">
-            <h3>Power</h3>
-            <p>仮想マシンを終了してハードウェアを解放します。</p>
-
-            <button class="secondary" id="stopButton" disabled>
-                ■ VMを停止
+            <button class="button" type="submit" id="sendKeyButton" disabled>
+                Send
             </button>
+        </form>
+
+        <div class="hint">
+            Text input uses a US keyboard layout. Click the VM display
+            to focus the virtual keyboard.
         </div>
 
-    </div>
+        <div class="log-panel">
+            <div class="panel-title">System Log</div>
+            <pre id="log">Ready.
+Select an ISO image to begin.</pre>
+        </div>
 
-    <div class="notice">
-        <strong>System Information</strong><br>
-        Engine: v86 0.5.473<br>
-        Boot: SeaBIOS / CD-ROM / HDD<br>
-        Architecture: x86 32-bit<br>
-        Network: VirtIO / NE2000<br>
-        Storage: ISO / RAW disk image<br>
-        <br>
-        ・ISOファイルはサーバーにアップロードされません。<br>
-        ・CD-ROMから直接起動できます。<br>
-        ・インストールには別途HDDイメージが必要です。<br>
-        ・64bit専用OSやUEFI専用ISOは起動できません。<br>
-        ・大容量ISOはブラウザのメモリを大量に使用します。<br>
-        ・ページをリロードすると実行状態は失われます。<br>
-        ・保存した状態は同じメディアとハードウェア構成で復元してください。
-    </div>
+    </section>
 
-</main>
+</div>
 
-<footer>
-    WebLinux · Powered by v86 · Browser-based x86 virtualization
-</footer>
+<div class="footer">
+    Runs in your browser. The ISO is read from your local device.
+    VM memory is not preserved when this page is reloaded unless you save its state.
+    x86 32-bit operating systems are supported; x86_64 operating systems are not.
+</div>
+
+</div>
 
 <script>
 "use strict";
 
-/* =========================================
-   v86 CDN CONFIGURATION
-========================================= */
+/* =========================================================
+   CONFIGURATION
+========================================================= */
 
-const V86_VERSION = "0.5.473";
+const V86_MIRRORS = [
+    {
+        name: "copy.sh",
+        base: "https://copy.sh/v86/",
+        script: "https://copy.sh/v86/build/libv86.js"
+    },
+    {
+        name: "jsDelivr",
+        base: "https://cdn.jsdelivr.net/gh/copy/v86@master/",
+        script: "https://cdn.jsdelivr.net/gh/copy/v86@master/build/libv86.js"
+    },
+    {
+        name: "Raw GitHub CDN",
+        base: "https://raw.githack.com/copy/v86/master/",
+        script: "https://raw.githack.com/copy/v86/master/build/libv86.js"
+    }
+];
 
-const V86_CDN =
-    "https://cdn.jsdelivr.net/npm/v86@" +
-    V86_VERSION + "/";
+const NETWORK_RELAY = "wss://relay.widgetry.org/";
 
-const BIOS_CDN =
-    "https://cdn.jsdelivr.net/gh/copy/v86@master/";
-
-/* =========================================
+/* =========================================================
    DOM
-========================================= */
+========================================================= */
 
-const $ = id => document.getElementById(id);
+const $ = (id) => document.getElementById(id);
 
 const isoInput = $("isoInput");
-const diskInput = $("diskInput");
-const restoreInput = $("restoreInput");
+const isoName = $("isoName");
+const isoMeta = $("isoMeta");
+const isoLabel = $("isoLabel");
 
 const startButton = $("startButton");
-const saveButton = $("saveButton");
 const stopButton = $("stopButton");
+const resetButton = $("resetButton");
+const destroyButton = $("destroyButton");
+const saveButton = $("saveButton");
+
+const restoreInput = $("restoreInput");
+const restoreLabel = $("restoreLabel");
 
 const screenContainer = $("screen_container");
+const screenPlaceholder = $("screenPlaceholder");
 
-/* =========================================
-   VM STATE
-========================================= */
+const statusText = $("statusText");
+const statusDot = $("statusDot");
+const logElement = $("log");
+
+const keyboardForm = $("keyboardForm");
+const keyboardInput = $("keyboardInput");
+const sendKeyButton = $("sendKeyButton");
+
+/* =========================================================
+   STATE
+========================================================= */
+
+let selectedISO = null;
 
 let emulator = null;
-let selectedISO = null;
-let selectedDisk = null;
+let emulatorReady = false;
+let emulatorStarting = false;
 
-let running = false;
-let busy = false;
-let machineConfig = null;
+let v86AssetBase = null;
 
-let startupTimeout = null;
-
-/* =========================================
+/* =========================================================
    UI HELPERS
-========================================= */
+========================================================= */
 
-function setStatus(text, type = "normal") {
-    $("status").textContent = text;
-    $("dot").className = "dot";
+function setStatus(message, type = "normal") {
+    statusText.textContent = message;
 
-    if (type === "running") {
-        $("dot").classList.add("running");
+    statusDot.className = "status-dot";
+
+    if (type === "good") {
+        statusDot.classList.add("good");
+    } else if (type === "bad") {
+        statusDot.classList.add("bad");
+    }
+}
+
+function appendLog(message) {
+    const timestamp = new Date().toLocaleTimeString();
+
+    const current = logElement.textContent || "";
+
+    logElement.textContent =
+        current +
+        "\n[" + timestamp + "] " +
+        message;
+
+    logElement.scrollTop = logElement.scrollHeight;
+}
+
+function formatBytes(bytes) {
+    if (!Number.isFinite(bytes)) {
+        return "Unknown size";
     }
 
-    if (type === "error") {
-        $("dot").classList.add("error");
-    }
-}
+    const units = ["B", "KB", "MB", "GB"];
 
-function setMessage(text) {
-    $("message").textContent = text;
-}
+    let value = bytes;
+    let unit = 0;
 
-function updateButtons() {
-    startButton.disabled = !selectedISO || busy;
-
-    saveButton.disabled = !running || busy;
-
-    stopButton.disabled = !emulator || busy;
-
-    restoreInput.disabled = !running || busy;
-}
-
-function setBusy(value) {
-    busy = value;
-    updateButtons();
-}
-
-/* =========================================
-   CDN DIAGNOSTICS
-========================================= */
-
-function checkV86() {
-    const constructor =
-        window.V86 || window.V86Starter;
-
-    if (typeof constructor !== "function") {
-        throw new Error(
-            "v86 library failed to load. " +
-            "Check https://cdn.jsdelivr.net/npm/v86@" +
-            V86_VERSION +
-            "/build/libv86.js"
-        );
+    while (value >= 1024 && unit < units.length - 1) {
+        value /= 1024;
+        unit++;
     }
 
-    return constructor;
+    return value.toFixed(2) + " " + units[unit];
 }
 
-/* =========================================
-   FILE READER
-========================================= */
+function updateControls() {
+    const hasVM = Boolean(emulator);
+    const ready = hasVM && emulatorReady;
 
-function readLocalFile(file, description) {
-    return new Promise((resolve, reject) => {
+    startButton.disabled =
+        emulatorStarting ||
+        (hasVM && !emulatorReady) ||
+        (!hasVM && !selectedISO);
+
+    startButton.textContent =
+        emulatorStarting
+            ? "Loading..."
+            : ready
+                ? "Run / Resume"
+                : "Boot ISO";
+
+    stopButton.disabled = !ready;
+    resetButton.disabled = !ready;
+    destroyButton.disabled = !hasVM;
+
+    saveButton.disabled = !ready;
+
+    restoreInput.disabled = !ready;
+    restoreLabel.classList.toggle("disabled", !ready);
+
+    fullscreenButton.disabled = !ready;
+
+    keyboardInput.disabled = !ready;
+    sendKeyButton.disabled = !ready;
+
+    isoInput.disabled = hasVM || emulatorStarting;
+    isoLabel.classList.toggle("disabled", hasVM || emulatorStarting);
+
+    $("memorySize").disabled = hasVM || emulatorStarting;
+    $("nicType").disabled = hasVM || emulatorStarting;
+    $("networkEnabled").disabled = hasVM || emulatorStarting;
+}
+
+/* =========================================================
+   FILE READING
+========================================================= */
+
+async function readFileAsArrayBuffer(file) {
+    if (!file) {
+        throw new Error("No file was supplied.");
+    }
+
+    if (typeof file.arrayBuffer === "function") {
+        return await file.arrayBuffer();
+    }
+
+    return await new Promise((resolve, reject) => {
         const reader = new FileReader();
-
-        reader.onprogress = event => {
-            if (event.lengthComputable) {
-                const percent = Math.round(
-                    event.loaded / event.total * 100
-                );
-
-                setMessage(
-                    "Reading " + description + ": " +
-                    percent + "%"
-                );
-            }
-        };
 
         reader.onload = () => {
             if (!(reader.result instanceof ArrayBuffer)) {
-                reject(new Error(
-                    "Invalid file data: " + description
-                ));
+                reject(new Error("Could not read the file as ArrayBuffer."));
                 return;
             }
 
@@ -614,351 +794,111 @@ function readLocalFile(file, description) {
         };
 
         reader.onerror = () => {
-            reject(new Error(
-                "Could not read file: " + description
-            ));
-        };
-
-        reader.onabort = () => {
-            reject(new Error(
-                "File reading was cancelled."
-            ));
+            reject(reader.error || new Error("File reading failed."));
         };
 
         reader.readAsArrayBuffer(file);
     });
 }
 
-/* =========================================
-   INPUT HANDLERS
-========================================= */
+/* =========================================================
+   ISO FILE SELECTION
+========================================================= */
 
-isoInput.addEventListener("change", event => {
-    selectedISO = event.target.files?.[0] || null;
+isoInput.addEventListener("change", (event) => {
+    const input = event.currentTarget;
+    const files = input.files;
 
-    $("isoName").textContent = selectedISO
-        ? selectedISO.name + " (" +
-          (selectedISO.size / 1048576).toFixed(1) +
-          " MB)"
-        : "No ISO selected";
-
-    updateButtons();
-
-    if (selectedISO) {
-        setMessage(
-            "Selected OS: " + selectedISO.name
-        );
-    }
-});
-
-diskInput.addEventListener("change", event => {
-    selectedDisk = event.target.files?.[0] || null;
-
-    $("diskName").textContent = selectedDisk
-        ? selectedDisk.name + " (" +
-          (selectedDisk.size / 1048576).toFixed(1) +
-          " MB)"
-        : "No HDD selected";
-});
-
-/* =========================================
-   SCREEN RESET
-========================================= */
-
-function resetScreen() {
-    screenContainer.replaceChildren();
-
-    const textScreen = document.createElement("div");
-
-    textScreen.style.whiteSpace = "pre";
-    textScreen.style.font = "14px monospace";
-    textScreen.style.lineHeight = "14px";
-
-    const canvas = document.createElement("canvas");
-
-    canvas.style.display = "none";
-
-    screenContainer.appendChild(textScreen);
-    screenContainer.appendChild(canvas);
-}
-
-/* =========================================
-   DESTROY VM
-========================================= */
-
-async function destroyVM() {
-    if (!emulator) {
-        running = false;
+    if (!files || files.length === 0) {
+        appendLog("File selection was cancelled.");
         return;
     }
 
-    const old = emulator;
+    const file = files[0];
 
-    emulator = null;
-    running = false;
+    selectedISO = file;
 
-    try {
-        await old.stop();
-    } catch (error) {
-        console.warn("VM stop:", error);
-    }
+    isoName.textContent = file.name;
+    isoMeta.textContent =
+        formatBytes(file.size) +
+        (file.type ? " · " + file.type : "");
 
-    try {
-        await old.destroy();
-    } catch (error) {
-        console.warn("VM destroy:", error);
-    }
-}
+    setStatus("ISO selected", "good");
 
-/* =========================================
-   START VM
-========================================= */
-
-async function startVM() {
-    if (!selectedISO) {
-        throw new Error("Please select an OS ISO.");
-    }
-
-    if (!/\.iso$/i.test(selectedISO.name)) {
-        throw new Error("Please select a valid .iso file.");
-    }
-
-    const V86Constructor = checkV86();
-
-    setBusy(true);
-
-    setStatus("PREPARING");
-
-    setMessage("Preparing virtual machine...");
-
-    await destroyVM();
-
-    resetScreen();
-
-    /*
-     * Read ISO into ArrayBuffer.
-     * v86's buffer image configuration requires ArrayBuffer.
-     */
-
-    if (selectedISO.size > 1024 * 1024 * 1024) {
-        const accepted = window.confirm(
-            "このISOは1GBを超えています。\n" +
-            "ブラウザのメモリを大量に使います。\n\n" +
-            "読み込みを続けますか？"
-        );
-
-        if (!accepted) {
-            throw new Error("ISO loading cancelled.");
-        }
-    }
-
-    const isoBuffer = await readLocalFile(
-        selectedISO,
-        "OS ISO"
+    appendLog(
+        "ISO selected: " +
+        file.name +
+        " (" +
+        formatBytes(file.size) +
+        ")"
     );
 
-    let diskBuffer = null;
+    if (file.size === 0) {
+        setStatus("Selected file is empty", "bad");
+        appendLog("ERROR: The selected file has zero bytes.");
+    }
 
-    if (selectedDisk) {
-        diskBuffer = await readLocalFile(
-            selectedDisk,
-            "HDD image"
+    if (file.size > 1024 * 1024 * 1024 * 2) {
+        appendLog(
+            "WARNING: This ISO is larger than 2 GB. " +
+            "Browser memory may be insufficient."
         );
     }
 
-    const memorySize = Number($("ram").value);
-
-    const nicType = $("nic").value;
-
     /*
-     * Save configuration metadata for this session.
+     * Clear the input so selecting the same file again
+     * can trigger another change event.
+     * selectedISO still holds the File object.
      */
+    input.value = "";
 
-    machineConfig = {
-        isoName: selectedISO.name,
-        isoSize: selectedISO.size,
-        diskName: selectedDisk?.name || null,
-        diskSize: selectedDisk?.size || null,
-        memorySize,
-        nicType
-    };
+    updateControls();
+});
 
-    /*
-     * v86 configuration
-     */
+/* =========================================================
+   LOAD V86 LIBRARY WITH FALLBACK
+========================================================= */
 
-    const config = {
-        wasm_path:
-            V86_CDN + "build/v86.wasm",
+function loadOneScript(url) {
+    return new Promise((resolve, reject) => {
+        const script = document.createElement("script");
 
-        memory_size:
-            memorySize,
-
-        vga_memory_size:
-            8 * 1024 * 1024,
-
-        screen_container:
-            screenContainer,
-
-        bios: {
-            url: BIOS_CDN + "bios/seabios.bin"
-        },
-
-        vga_bios: {
-            url: BIOS_CDN + "bios/vgabios.bin"
-        },
-
-        cdrom: {
-            buffer: isoBuffer
-        },
-
-        /*
-         * CD-ROM first, HDD second, floppy third.
-         */
-
-        boot_order: 0x123,
-
-        bootmenu: true,
-
-        autostart: false,
-
-        disable_speaker: true
-    };
-
-    /*
-     * Optional virtual hard disk.
-     */
-
-    if (diskBuffer) {
-        config.hda = {
-            buffer: diskBuffer
-        };
-    }
-
-    /*
-     * Optional network adapter.
-     */
-
-    if (nicType !== "none") {
-        config.net_device = {
-            type: nicType,
-            relay_url: "wss://relay.widgetry.org/"
-        };
-    }
-
-    setStatus("INITIALIZING");
-
-    setMessage(
-        "Creating virtual machine. Loading BIOS and WebAssembly..."
-    );
-
-    let instance;
-
-    try {
-        instance = new V86Constructor(config);
-    } catch (error) {
-        throw new Error(
-            "Failed to create v86 instance: " + error.message
-        );
-    }
-
-    emulator = instance;
-
-    /*
-     * Wait for the actual emulator-ready event.
-     */
-
-    const readyPromise = new Promise((resolve, reject) => {
         let completed = false;
 
-        startupTimeout = setTimeout(() => {
+        const timeout = setTimeout(() => {
             if (completed) return;
 
             completed = true;
+            script.remove();
 
-            reject(new Error(
-                "VM initialization timed out. " +
-                "Check network connectivity and CDN resources."
-            ));
-        }, 180000);
+            reject(new Error("Script loading timed out: " + url));
+        }, 20000);
 
-        instance.add_listener("download-progress", event => {
-            const percentage =
-                event.lengthComputable && event.total
-                    ? Math.round(
-                        event.loaded / event.total * 100
-                    ) + "%"
-                    : "";
+        script.async = true;
+        script.crossOrigin = "anonymous";
+        script.src = url;
 
-            setMessage(
-                "Loading " +
-                (event.file_name || "VM resource") +
-                " " + percentage
-            );
-        });
+        script.onload = () => {
+            if (completed) return;
 
-        instance.add_listener("download-error", event => {
-            console.error("v86 download error:", event);
+            completed = true;
+            clearTimeout(timeout);
 
-            const name =
-                event?.file_name || "unknown resource";
-
-            const httpStatus =
-                event?.request?.status;
-
-            setStatus("DOWNLOAD ERROR", "error");
-
-            setMessage(
-                "Failed to load " + name +
-                (httpStatus ? " (HTTP " + httpStatus + ")" : "")
-            );
-
-            if (!completed) {
-                completed = true;
-                clearTimeout(startupTimeout);
-
-                reject(new Error(
-                    "Download failed: " + name
-                ));
+            if (typeof window.V86 === "function") {
+                resolve();
+            } else {
+                script.remove();
+                reject(
+                    new Error(
+                        "The script loaded, but window.V86 was not found."
+                    )
+                );
             }
-        });
+        };
 
-        instance.add_listener("emulator-ready", () => {
+        script.onerror = () => {
             if (completed) return;
 
             completed = true;
-            clearTimeout(startupTimeout);
-
-            resolve();
-        });
-
-        instance.add_listener("emulator-started", () => {
-            if (emulator !== instance) return;
-
-            running = true;
-
-            setStatus("RUNNING", "running");
-
-            setMessage(
-                "Virtual machine started. OS booting..."
-            );
-
-            updateButtons();
-
-            screenContainer.focus();
-        });
-
-        instance.add_listener("emulator-stopped", () => {
-            if (emulator !== instance) return;
-
-            running = false;
-
-            setStatus("STOPPED");
-
-            updateButtons();
-        });
-    });
-
-    /*
-     * Wait until BIOS, WASM and req
-    
+            clearTimeout(timeout);
+            script.rem
