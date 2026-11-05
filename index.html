@@ -1,300 +1,95 @@
+
 <!DOCTYPE html>
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#090b0f">
-<title>WebLinux | v86 Virtual Machine</title>
+<title>WebLinux - v86</title>
 
 <script src="https://copy.sh/v86/build/libv86.js"></script>
 
 <style>
-:root {
-    color-scheme: dark;
-    --bg: #090b0f;
-    --panel: #11151c;
-    --border: #252c38;
-    --text: #e5eaf2;
-    --muted: #8793a5;
-    --green: #35d69a;
-    --red: #ff6464;
+*{box-sizing:border-box}
+body{
+ margin:0;background:#090b0f;color:#e5eaf2;
+ font-family:system-ui,-apple-system,sans-serif
 }
-
-* {
-    box-sizing: border-box;
+header{
+ padding:18px 22px;border-bottom:1px solid #252c38;
+ display:flex;justify-content:space-between;align-items:center
 }
-
-body {
-    margin: 0;
-    min-height: 100vh;
-    background: var(--bg);
-    color: var(--text);
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+.brand{font-weight:750;font-size:18px}
+.version{font:11px monospace;color:#8793a5}
+main{max-width:1100px;margin:auto;padding:22px 15px}
+.top{
+ display:flex;justify-content:space-between;
+ align-items:center;margin-bottom:14px
 }
-
-header {
-    height: 65px;
-    padding: 0 22px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    border-bottom: 1px solid var(--border);
-    background: #0c0f14;
+h2{font-size:14px}
+.status{font:12px monospace;color:#8793a5}
+.dot{
+ display:inline-block;width:8px;height:8px;
+ border-radius:50%;background:#647080;margin-right:7px
 }
-
-.brand {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    font-size: 17px;
-    font-weight: 700;
-    letter-spacing: .3px;
+.dot.ok{background:#35d69a;box-shadow:0 0 8px #35d69a}
+.dot.err{background:#ff5555}
+.terminal{
+ background:#000;border:1px solid #29313d;
+ border-radius:10px;overflow:hidden
 }
-
-.logo {
-    width: 32px;
-    height: 32px;
-    display: grid;
-    place-items: center;
-    background: #153b30;
-    border-radius: 9px;
-    color: var(--green);
-    font-family: monospace;
-    font-size: 18px;
+.terminal-head{
+ padding:11px 14px;background:#151a23;
+ font:11px monospace;color:#aab5c5
 }
-
-.version {
-    color: var(--muted);
-    font-size: 11px;
-    font-family: monospace;
+#screen_container{
+ min-height:420px;padding:12px;overflow:auto;
+ background:#000;color:#c9f7d8;
+ font:14px/1.1 monospace;outline:none;
+ touch-action:manipulation
 }
-
-main {
-    max-width: 1100px;
-    padding: 24px 18px;
-    margin: auto;
+#screen_container div{
+ font-family:monospace!important;
+ white-space:pre
 }
-
-.section-title {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 14px;
+#screen_container canvas{max-width:100%}
+#message{
+ margin:13px 0;color:#9ba8ba;
+ font:12px monospace;overflow-wrap:anywhere
 }
-
-.section-title h2 {
-    margin: 0;
-    font-size: 14px;
-    font-weight: 650;
+.controls{
+ display:grid;grid-template-columns:1fr 1fr;gap:12px
 }
-
-.status {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    color: var(--muted);
-    font-family: monospace;
-    font-size: 12px;
+.card{
+ padding:17px;background:#111720;
+ border:1px solid #29313d;border-radius:10px
 }
-
-.dot {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    background: #647080;
+.card h3{font-size:13px;margin:0 0 8px}
+.card p{
+ color:#8995a7;font-size:11px;line-height:1.7;
+ min-height:38px
 }
-
-.dot.running {
-    background: var(--green);
-    box-shadow: 0 0 9px var(--green);
+button,.file-label{
+ width:100%;padding:13px;border:0;border-radius:7px;
+ background:#35d69a;color:#06150e;
+ font-weight:700;font-size:12px;cursor:pointer;
+ display:block;text-align:center
 }
-
-.dot.error {
-    background: var(--red);
+.file-label{background:#263747;color:#e5eaf2}
+button:disabled{opacity:.4;cursor:not-allowed}
+input[type=file]{display:none}
+.notice{
+ margin-top:16px;padding:14px;
+ background:#111720;border:1px solid #29313d;
+ border-radius:9px;color:#9ba8ba;
+ font-size:11px;line-height:1.9
 }
-
-.terminal-panel {
-    overflow: hidden;
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    background: #000;
-    box-shadow: 0 15px 50px #0007;
+footer{
+ text-align:center;padding:24px;color:#596579;font-size:10px
 }
-
-.terminal-header {
-    height: 38px;
-    background: #151a23;
-    border-bottom: 1px solid #262d38;
-    display: flex;
-    align-items: center;
-    padding: 0 14px;
-    gap: 7px;
-}
-
-.traffic {
-    width: 9px;
-    height: 9px;
-    border-radius: 50%;
-    background: #414956;
-}
-
-.traffic:nth-child(1) {
-    background: #ff6259;
-}
-
-.traffic:nth-child(2) {
-    background: #ffbd44;
-}
-
-.traffic:nth-child(3) {
-    background: #35c978;
-}
-
-.terminal-label {
-    margin-left: 9px;
-    color: #929bab;
-    font-family: monospace;
-    font-size: 11px;
-}
-
-#screen_container {
-    width: 100%;
-    min-height: 420px;
-    padding: 12px;
-    overflow: auto;
-    background: #000;
-    color: #c9f7d8;
-    font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
-    font-size: 14px;
-    line-height: 1.1;
-    outline: none;
-    cursor: text;
-    touch-action: manipulation;
-}
-
-#screen_container div {
-    white-space: pre;
-    font-family: inherit !important;
-    color: inherit;
-}
-
-#screen_container canvas {
-    max-width: 100%;
-}
-
-.controls {
-    margin-top: 20px;
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 12px;
-}
-
-.action-card {
-    min-width: 0;
-    padding: 17px;
-    background: var(--panel);
-    border: 1px solid var(--border);
-    border-radius: 11px;
-}
-
-.action-card h3 {
-    margin: 0 0 7px;
-    font-size: 13px;
-}
-
-.action-card p {
-    color: var(--muted);
-    font-size: 11px;
-    line-height: 1.6;
-    margin: 0 0 14px;
-}
-
-button,
-.file-label {
-    min-height: 40px;
-    width: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 9px;
-    padding: 10px 14px;
-    color: #08150f;
-    background: var(--green);
-    border: none;
-    border-radius: 7px;
-    font-size: 12px;
-    font-weight: 700;
-    cursor: pointer;
-    transition: .15s;
-}
-
-button:hover,
-.file-label:hover {
-    filter: brightness(1.1);
-}
-
-button:disabled {
-    opacity: .4;
-    cursor: not-allowed;
-}
-
-.file-label {
-    background: #263342;
-    color: #dbe7f5;
-}
-
-input[type="file"] {
-    display: none;
-}
-
-.notice {
-    padding: 13px 15px;
-    margin-top: 17px;
-    background: #111720;
-    border: 1px solid var(--border);
-    border-radius: 9px;
-    color: var(--muted);
-    font-size: 11px;
-    line-height: 1.8;
-}
-
-.notice strong {
-    color: var(--text);
-}
-
-#message {
-    min-height: 20px;
-    margin-top: 13px;
-    color: var(--muted);
-    font-family: monospace;
-    font-size: 11px;
-    overflow-wrap: anywhere;
-}
-
-footer {
-    padding: 22px;
-    text-align: center;
-    color: #586273;
-    font-size: 10px;
-}
-
-@media(max-width: 600px) {
-    header {
-        padding: 0 14px;
-    }
-
-    main {
-        padding: 18px 12px;
-    }
-
-    .controls {
-        grid-template-columns: 1fr;
-    }
-
-    #screen_container {
-        min-height: 360px;
-        font-size: 12px;
-    }
+@media(max-width:600px){
+ .controls{grid-template-columns:1fr}
+ #screen_container{min-height:360px;font-size:12px}
 }
 </style>
 </head>
@@ -302,275 +97,229 @@ footer {
 <body>
 
 <header>
-    <div class="brand">
-        <div class="logo">&gt;_</div>
-        <span>WebLinux</span>
-    </div>
-    <div class="version">V86 ENGINE / X86</div>
+ <div class="brand">▣ WebLinux</div>
+ <div class="version">V86 / X86 VIRTUAL MACHINE</div>
 </header>
 
 <main>
 
-    <div class="section-title">
-        <h2>Virtual Machine</h2>
-        <div class="status">
-            <span id="statusDot" class="dot"></span>
-            <span id="statusText">INITIALIZING</span>
-        </div>
-    </div>
+ <div class="top">
+  <h2>Virtual Machine</h2>
+  <div class="status">
+   <span id="dot" class="dot"></span>
+   <span id="status">INITIALIZING</span>
+  </div>
+ </div>
 
-    <div class="terminal-panel">
-        <div class="terminal-header">
-            <span class="traffic"></span>
-            <span class="traffic"></span>
-            <span class="traffic"></span>
-            <span class="terminal-label">root@weblinux: ~</span>
-        </div>
+ <div class="terminal">
+  <div class="terminal-head">● ● ● &nbsp; root@weblinux: ~</div>
+  <div id="screen_container">
+   <div></div>
+   <canvas style="display:none"></canvas>
+  </div>
+ </div>
 
-        <div id="screen_container" tabindex="0">
-            <div></div>
-            <canvas style="display:none"></canvas>
-        </div>
-    </div>
+ <div id="message">Loading v86...</div>
 
-    <div id="message">Initializing virtual machine...</div>
+ <div class="controls">
 
-    <div class="controls">
+  <section class="card">
+   <h3>Save Session</h3>
+   <p>現在のCPU・メモリ・仮想デバイスの状態を保存します。</p>
+   <button id="save" disabled>↓ 現在の状態を保存</button>
+  </section>
 
-        <section class="action-card">
-            <h3>Save Session</h3>
-            <p>
-                現在のCPU・メモリ・仮想デバイスなどの状態を
-                バイナリファイルに保存します。
-            </p>
-            <button id="saveButton" disabled>
-                ↓ 現在の状態を保存
-            </button>
-        </section>
+  <section class="card">
+   <h3>Restore Session</h3>
+   <p>保存した linux_session.bin から再開します。</p>
+   <label class="file-label" for="restore">
+    ↑ 保存したファイルから再開
+   </label>
+   <input id="restore" type="file" accept=".bin">
+  </section>
 
-        <section class="action-card">
-            <h3>Restore Session</h3>
-            <p>
-                以前保存した linux_session.bin を読み込み、
-                その時点の仮想マシンを復元します。
-            </p>
+ </div>
 
-            <label class="file-label" for="restoreInput">
-                ↑ 保存したファイルから再開
-            </label>
-
-            <input
-                id="restoreInput"
-                type="file"
-                accept=".bin,application/octet-stream"
-            >
-        </section>
-
-    </div>
-
-    <div class="notice">
-        <strong>Session information</strong><br>
-        ・この仮想マシンはブラウザ内で動作します。<br>
-        ・ページをリロードすると、現在の実行状態は失われます。<br>
-        ・状態を保持するには「現在の状態を保存」を使用してください。<br>
-        ・保存したファイルを読み込むと、CPU・メモリなどを復元します。<br>
-        ・保存ファイルは、同じv86バージョンと仮想マシン構成で使用してください。
-    </div>
+ <div class="notice">
+  <b>SESSION INFORMATION</b><br>
+  ・ブラウザ内で動作するx86 Linux環境です。<br>
+  ・ページをリロードすると実行状態は失われます。<br>
+  ・保存した linux_session.bin から復元できます。<br>
+  ・復元には同じv86バージョンと同じVM構成が必要です。<br>
+  ・初回起動時はLinuxのファイルシステムをダウンロードします。
+ </div>
 
 </main>
 
-<footer>
-    WebLinux · Powered by v86 · Browser-based x86 virtualization
-</footer>
+<footer>WebLinux / Powered by v86</footer>
 
 <script>
 "use strict";
 
-const V86_CONFIG = {
-    wasm_path: "https://copy.sh/v86/build/v86.wasm",
+const ROOT = "https://copy.sh/v86/";
 
-    memory_size: 256 * 1024 * 1024,
+const CONFIG = {
+    wasm_path: ROOT + "build/v86.wasm",
+
+    memory_size: 512 * 1024 * 1024,
     vga_memory_size: 8 * 1024 * 1024,
 
-    screen_container: document.getElementById("screen_container"),
+    screen_container:
+        document.getElementById("screen_container"),
 
     bios: {
-        url: "https://copy.sh/v86/bios/seabios.bin"
+        url: ROOT + "bios/seabios.bin"
     },
 
     vga_bios: {
-        url: "https://copy.sh/v86/bios/vgabios.bin"
+        url: ROOT + "bios/vgabios.bin"
     },
 
-    /*
-     * Alpine Linux 32-bit root filesystem.
-     * The kernel and initrd are loaded from this filesystem.
-     */
     filesystem: {
-        baseurl: "https://copy.sh/v86/images/alpine-rootfs-flat",
-        basefs: "https://copy.sh/v86/images/alpine-fs.json"
+        baseurl: ROOT + "images/alpine-rootfs-flat/",
+        basefs: ROOT + "images/alpine-fs.json"
     },
 
     bzimage_initrd_from_filesystem: true,
 
-    /*
-     * root=host9p is the v86 9p root device.
-     * It is required for mounting the supplied root filesystem.
-     */
-    cmdline: [
-        "tsc=reliable",
-        "builtin_modules=9pnet_virtio,9p",
-        "virtio_pci.force_legacy=1",
-        "root=host9p",
-        "rw",
-        "rootfstype=9p",
-        "rootflags=trans=virtio,version=9p2000.L",
-        "init=/bin/sh"
-    ].join(" "),
+    cmdline:
+        "rw root=host9p rootfstype=9p " +
+        "rootflags=trans=virtio,cache=loose " +
+        "modules=virtio_pci tsc=reliable",
 
     autostart: true
 };
 
-const saveButton = document.getElementById("saveButton");
-const restoreInput = document.getElementById("restoreInput");
-const statusText = document.getElementById("statusText");
-const statusDot = document.getElementById("statusDot");
-const message = document.getElementById("message");
-const screenContainer = document.getElementById("screen_container");
+const $ = id => document.getElementById(id);
 
 let emulator = null;
-let isBusy = false;
+let ready = false;
+let busy = false;
 
-function setStatus(text, type = "normal") {
-    statusText.textContent = text;
-
-    statusDot.className = "dot";
-
-    if (type === "running") {
-        statusDot.classList.add("running");
-    } else if (type === "error") {
-        statusDot.classList.add("error");
-    }
+function status(text, type = "") {
+    $("status").textContent = text;
+    $("dot").className = "dot " + type;
 }
 
-function setMessage(text) {
-    message.textContent = text;
+function message(text) {
+    $("message").textContent = text;
 }
 
 function setBusy(value) {
-    isBusy = value;
-    saveButton.disabled = value || !emulator;
-    restoreInput.disabled = value;
+    busy = value;
+    $("save").disabled = value || !ready;
+    $("restore").disabled = value;
 }
 
 function resetScreen() {
-    screenContainer.replaceChildren();
+    const screen = $("screen_container");
+    screen.replaceChildren();
 
-    const textScreen = document.createElement("div");
-    textScreen.style.whiteSpace = "pre";
-    textScreen.style.fontFamily = "monospace";
+    const text = document.createElement("div");
+    text.style.whiteSpace = "pre";
+    text.style.fontFamily = "monospace";
 
     const canvas = document.createElement("canvas");
     canvas.style.display = "none";
 
-    screenContainer.appendChild(textScreen);
-    screenContainer.appendChild(canvas);
+    screen.append(text, canvas);
 }
 
-async function startEmulator(initialState = null) {
+function waitForReady(vm) {
+    return new Promise((resolve, reject) => {
+        let completed = false;
+
+        const timeout = setTimeout(() => {
+            if (!completed) {
+                completed = true;
+                reject(new Error(
+                    "VM initialization timed out. Check network and CORS."
+                ));
+            }
+        }, 180000);
+
+        vm.add_listener("emulator-ready", () => {
+            if (completed) return;
+            completed = true;
+            clearTimeout(timeout);
+            resolve();
+        });
+    });
+}
+
+async function createVM() {
     if (typeof V86 === "undefined") {
-        throw new Error("v86 core script could not be loaded.");
+        throw new Error(
+            "v86.js not loaded. Check the script URL."
+        );
     }
 
     resetScreen();
+    ready = false;
 
-    setBusy(true);
+    status("INITIALIZING");
+    message("Loading BIOS, WebAssembly and Linux filesystem...");
 
-    setStatus("INITIALIZING");
-    setMessage("Loading BIOS, WebAssembly and Linux root filesystem...");
+    const vm = new V86(CONFIG);
 
-    const config = {
-        ...V86_CONFIG,
-        screen_container: screenContainer
-    };
+    emulator = vm;
 
-    if (initialState instanceof ArrayBuffer) {
-        config.initial_state = {
-            buffer: initialState
-        };
-    }
-
-    const instance = new V86(config);
-
-    emulator = instance;
-
-    instance.add_listener("download-progress", function(info) {
+    vm.add_listener("download-progress", info => {
         if (!info) return;
 
-        const percent = info.lengthComputable && info.total > 0
+        const percent =
+            info.lengthComputable && info.total
             ? Math.round(info.loaded / info.total * 100) + "%"
             : "";
 
-        setMessage(
-            "Downloading " +
-            info.file_name +
-            " " +
-            percent
+        message(
+            "Downloading: " +
+            (info.file_name || "resource") +
+            " " + percent
         );
     });
 
-    instance.add_listener("download-error", function(info) {
-        const name = info && info.file_name
-            ? info.file_name
-            : "Unknown resource";
-
-        setStatus("DOWNLOAD ERROR", "error");
-        setMessage("Failed to download: " + name);
+    vm.add_listener("download-error", info => {
+        console.error("Download error:", info);
+        status("DOWNLOAD ERROR", "err");
+        message("Download failed: " + JSON.stringify(info));
     });
 
-    instance.add_listener("emulator-loaded", function() {
-        setMessage("Emulator resources loaded.");
+    vm.add_listener("emulator-started", () => {
+        if (emulator !== vm) return;
+        status("RUNNING", "ok");
+        message("Linux is running.");
     });
 
-    instance.add_listener("emulator-ready", function() {
-        if (emulator !== instance) return;
-
-        setMessage("Virtual machine is ready.");
-        saveButton.disabled = false;
+    vm.add_listener("emulator-stopped", () => {
+        if (emulator !== vm) return;
+        status("STOPPED");
     });
 
-    instance.add_listener("emulator-started", function() {
-        if (emulator !== instance) return;
+    await waitForReady(vm);
 
-        setStatus("RUNNING", "running");
-        setMessage(
-            initialState
-                ? "Saved Linux session restored."
-                : "Linux virtual machine started."
-        );
+    if (emulator !== vm) {
+        throw new Error("VM instance changed.");
+    }
 
-        setBusy(false);
-    });
+    ready = true;
+    setBusy(false);
 
-    instance.add_listener("emulator-stopped", function() {
-        if (emulator !== instance) return;
+    status("RUNNING", "ok");
+    message("Virtual machine ready.");
 
-        setStatus("STOPPED");
-    });
-
-    return instance;
+    return vm;
 }
 
-/*
- * Save complete v86 state.
- */
-saveButton.addEventListener("click", async function() {
-    if (!emulator || isBusy) return;
+/* Save */
+
+$("save").addEventListener("click", async () => {
+    if (!emulator || !ready || busy) return;
 
     try {
         setBusy(true);
-        setStatus("SAVING");
-        setMessage("Capturing CPU, memory and device state...");
+        status("SAVING");
+        message("Saving virtual machine state...");
 
         const state = await emulator.save_state();
 
@@ -580,142 +329,106 @@ saveButton.addEventListener("click", async function() {
         );
 
         const url = URL.createObjectURL(blob);
-        const link = document.createElement("a");
+        const a = document.createElement("a");
 
-        link.href = url;
-        link.download = "linux_session.bin";
+        a.href = url;
+        a.download = "linux_session.bin";
 
-        document.body.appendChild(link);
-        link.click();
-        link.remove();
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
 
-        setTimeout(function() {
-            URL.revokeObjectURL(url);
-        }, 30000);
+        setTimeout(() => URL.revokeObjectURL(url), 60000);
 
-        setStatus("RUNNING", "running");
+        status("RUNNING", "ok");
 
-        setMessage(
-            "Session saved successfully. " +
-            "Size: " +
-            (state.byteLength / 1024 / 1024).toFixed(2) +
+        message(
+            "Saved: " +
+            (state.byteLength / 1048576).toFixed(2) +
             " MB"
         );
 
-    } catch (error) {
-        console.error("Save error:", error);
-
-        setStatus("SAVE ERROR", "error");
-        setMessage("Failed to save session: " + error.message);
+    } catch (e) {
+        console.error(e);
+        status("SAVE ERROR", "err");
+        message(e.message);
 
     } finally {
         setBusy(false);
     }
 });
 
-/*
- * Read a binary state file.
- */
-function readFileAsArrayBuffer(file) {
-    return new Promise(function(resolve, reject) {
-        const reader = new FileReader();
+/* Restore */
 
-        reader.onload = function(event) {
-            resolve(event.target.result);
-        };
+$("restore").addEventListener("change", async event => {
+    const file = event.target.files[0];
 
-        reader.onerror = function() {
-            reject(new Error("Unable to read selected file."));
-        };
-
-        reader.readAsArrayBuffer(file);
-    });
-}
-
-/*
- * Destroy current emulator and recreate it using initial_state.
- */
-restoreInput.addEventListener("change", async function(event) {
-    const file = event.target.files && event.target.files[0];
-
-    if (!file || isBusy) return;
+    if (!file || busy || !emulator || !ready) {
+        event.target.value = "";
+        return;
+    }
 
     try {
         setBusy(true);
+        status("READING");
 
-        setStatus("READING STATE");
-        setMessage("Reading " + file.name + "...");
+        message("Reading " + file.name + "...");
 
-        const stateBuffer = await readFileAsArrayBuffer(file);
+        const buffer = await file.arrayBuffer();
 
-        if (!(stateBuffer instanceof ArrayBuffer) || stateBuffer.byteLength === 0) {
-            throw new Error("Invalid or empty state file.");
+        if (!buffer.byteLength) {
+            throw new Error("Empty state file.");
         }
 
-        /*
-         * Stop and completely destroy the current VM.
-         */
-        if (emulator) {
-            setStatus("DESTROYING VM");
-            setMessage("Stopping current virtual machine...");
+        message("Stopping current virtual machine...");
 
-            const oldEmulator = emulator;
-            emulator = null;
+        await emulator.stop();
 
-            await oldEmulator.stop();
-            await oldEmulator.destroy();
-        }
+        status("RESTORING");
+        message("Restoring CPU, memory and devices...");
 
-        /*
-         * Recreate the machine with the saved state.
-         * All hardware and memory settings must match the original VM.
-         */
-        setStatus("RESTORING");
-        setMessage("Creating a new virtual machine from saved state...");
+        await emulator.restore_state(buffer);
 
-        await startEmulator(stateBuffer);
+        emulator.run();
 
-        setMessage("Restoration initialized.");
+        status("RUNNING", "ok");
+        message("Session successfully restored.");
 
-    } catch (error) {
-        console.error("Restore error:", error);
-
-        setStatus("RESTORE ERROR", "error");
-        setMessage("Failed to restore session: " + error.message);
-
-        saveButton.disabled = !emulator;
+    } catch (e) {
+        console.error(e);
+        status("RESTORE ERROR", "err");
+        message("Restore failed: " + e.message);
 
     } finally {
-        restoreInput.value = "";
-        if (emulator && !emulator.is_running()) {
-            setBusy(false);
-        }
-    }
-});
-
-/*
- * Automatic Linux boot on page load.
- */
-window.addEventListener("load", async function() {
-    try {
-        if (typeof V86 === "undefined") {
-            throw new Error("Unable to load the v86 JavaScript library.");
-        }
-
-        await startEmulator();
-
-    } catch (error) {
-        console.error("Initialization error:", error);
-
-        setStatus("INITIALIZATION ERROR", "error");
-        setMessage(error.message);
-
-        saveButton.disabled = true;
+        event.target.value = "";
         setBusy(false);
     }
 });
 
-</script>
+/* Automatic startup */
 
+(async function boot() {
+    try {
+        if (typeof V86 === "undefined") {
+            throw new Error(
+                "Cannot load v86.js from copy.sh"
+            );
+        }
+
+        await createVM();
+
+    } catch (e) {
+        console.error("Boot error:", e);
+
+        ready = false;
+        status("BOOT ERROR", "err");
+        message(e.message);
+
+        $("save").disabled = true;
+        setBusy(false);
+    }
+})();
+
+</script>
 </body>
-  </html>
+</html>
