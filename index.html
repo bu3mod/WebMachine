@@ -3,93 +3,252 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="theme-color" content="#090b0f">
-<title>WebLinux - v86</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#090b10">
+<title>WebLinux | Virtual Machine</title>
 
-<script src="https://copy.sh/v86/build/libv86.js"></script>
+<link rel="stylesheet"
+ href="https://cdn.jsdelivr.net/npm/@xterm/xterm@5.5.0/css/xterm.css">
+
+<script defer src="https://cdn.jsdelivr.net/npm/v86@0.5.473/build/libv86.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/@xterm/xterm@5.5.0/lib/xterm.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/@xterm/addon-fit@0.10.0/lib/addon-fit.js"></script>
 
 <style>
-*{box-sizing:border-box}
-body{
- margin:0;background:#090b0f;color:#e5eaf2;
- font-family:system-ui,-apple-system,sans-serif
+:root {
+    color-scheme: dark;
+    --bg: #090b10;
+    --panel: #111720;
+    --border: #252e3c;
+    --green: #38d99b;
+    --muted: #8290a2;
+    --text: #e8edf5;
 }
-header{
- padding:18px 22px;border-bottom:1px solid #252c38;
- display:flex;justify-content:space-between;align-items:center
+
+* { box-sizing: border-box; }
+
+body {
+    margin: 0;
+    min-height: 100vh;
+    background: var(--bg);
+    color: var(--text);
+    font-family: system-ui, sans-serif;
 }
-.brand{font-weight:750;font-size:18px}
-.version{font:11px monospace;color:#8793a5}
-main{max-width:1100px;margin:auto;padding:22px 15px}
-.top{
- display:flex;justify-content:space-between;
- align-items:center;margin-bottom:14px
+
+header {
+    height: 65px;
+    padding: 0 22px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: #0d1118;
+    border-bottom: 1px solid var(--border);
 }
-h2{font-size:14px}
-.status{font:12px monospace;color:#8793a5}
-.dot{
- display:inline-block;width:8px;height:8px;
- border-radius:50%;background:#647080;margin-right:7px
+
+.brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-weight: 750;
+    font-size: 17px;
 }
-.dot.ok{background:#35d69a;box-shadow:0 0 8px #35d69a}
-.dot.err{background:#ff5555}
-.terminal{
- background:#000;border:1px solid #29313d;
- border-radius:10px;overflow:hidden
+
+.logo {
+    width: 34px;
+    height: 34px;
+    display: grid;
+    place-items: center;
+    border-radius: 9px;
+    background: #143b30;
+    color: var(--green);
+    font-family: monospace;
 }
-.terminal-head{
- padding:11px 14px;background:#151a23;
- font:11px monospace;color:#aab5c5
+
+.version {
+    font: 11px monospace;
+    color: var(--muted);
 }
-#screen_container{
- min-height:420px;padding:12px;overflow:auto;
- background:#000;color:#c9f7d8;
- font:14px/1.1 monospace;outline:none;
- touch-action:manipulation
+
+main {
+    width: min(100%, 1050px);
+    margin: auto;
+    padding: 25px 16px;
 }
-#screen_container div{
- font-family:monospace!important;
- white-space:pre
+
+.topbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 14px;
 }
-#screen_container canvas{max-width:100%}
-#message{
- margin:13px 0;color:#9ba8ba;
- font:12px monospace;overflow-wrap:anywhere
+
+.topbar h2 {
+    font-size: 14px;
+    margin: 0;
 }
-.controls{
- display:grid;grid-template-columns:1fr 1fr;gap:12px
+
+.status {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--muted);
+    font: 11px monospace;
 }
-.card{
- padding:17px;background:#111720;
- border:1px solid #29313d;border-radius:10px
+
+.dot {
+    width: 8px;
+    height: 8px;
+    background: #677386;
+    border-radius: 50%;
 }
-.card h3{font-size:13px;margin:0 0 8px}
-.card p{
- color:#8995a7;font-size:11px;line-height:1.7;
- min-height:38px
+
+.dot.running {
+    background: var(--green);
+    box-shadow: 0 0 10px var(--green);
 }
-button,.file-label{
- width:100%;padding:13px;border:0;border-radius:7px;
- background:#35d69a;color:#06150e;
- font-weight:700;font-size:12px;cursor:pointer;
- display:block;text-align:center
+
+.dot.error {
+    background: #ff5555;
 }
-.file-label{background:#263747;color:#e5eaf2}
-button:disabled{opacity:.4;cursor:not-allowed}
-input[type=file]{display:none}
-.notice{
- margin-top:16px;padding:14px;
- background:#111720;border:1px solid #29313d;
- border-radius:9px;color:#9ba8ba;
- font-size:11px;line-height:1.9
+
+.terminal-box {
+    background: #000;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
 }
-footer{
- text-align:center;padding:24px;color:#596579;font-size:10px
+
+.terminal-header {
+    height: 39px;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    padding: 0 14px;
+    background: #151b25;
+    border-bottom: 1px solid var(--border);
 }
-@media(max-width:600px){
- .controls{grid-template-columns:1fr}
- #screen_container{min-height:360px;font-size:12px}
+
+.traffic {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+}
+
+.traffic:nth-child(1) { background: #ff6159; }
+.traffic:nth-child(2) { background: #ffbd44; }
+.traffic:nth-child(3) { background: #35c978; }
+
+.terminal-name {
+    margin-left: 9px;
+    font: 11px monospace;
+    color: #9da9b9;
+}
+
+#terminal {
+    width: 100%;
+    height: 460px;
+    padding: 12px;
+    background: #000;
+}
+
+.xterm {
+    height: 100%;
+}
+
+.xterm-viewport {
+    background: #000 !important;
+}
+
+.info {
+    color: var(--muted);
+    font: 11px monospace;
+    margin-top: 12px;
+    min-height: 20px;
+    overflow-wrap: anywhere;
+}
+
+.controls {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-top: 20px;
+}
+
+.card {
+    padding: 17px;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 11px;
+}
+
+.card h3 {
+    font-size: 13px;
+    margin: 0 0 8px;
+}
+
+.card p {
+    font-size: 11px;
+    line-height: 1.7;
+    color: var(--muted);
+    margin: 0 0 14px;
+}
+
+button, .file-label {
+    display: flex;
+    width: 100%;
+    height: 42px;
+    justify-content: center;
+    align-items: center;
+    border: 0;
+    border-radius: 7px;
+    background: var(--green);
+    color: #07160f;
+    font-size: 12px;
+    font-weight: 750;
+    cursor: pointer;
+}
+
+.restore {
+    background: #273548;
+    color: white;
+}
+
+button:disabled, .file-label.disabled {
+    opacity: .4;
+    pointer-events: none;
+}
+
+input[type=file] {
+    display: none;
+}
+
+.notice {
+    padding: 14px;
+    margin-top: 17px;
+    border: 1px solid var(--border);
+    border-radius: 9px;
+    background: #111720;
+    color: var(--muted);
+    font-size: 11px;
+    line-height: 1.9;
+}
+
+.notice strong {
+    color: var(--text);
+}
+
+footer {
+    padding: 24px;
+    text-align: center;
+    color: #596579;
+    font-size: 10px;
+}
+
+@media(max-width: 600px) {
+    header { padding: 0 14px; }
+    main { padding: 18px 11px; }
+    .controls { grid-template-columns: 1fr; }
+    #terminal { height: 55vh; min-height: 330px; }
 }
 </style>
 </head>
@@ -97,338 +256,596 @@ footer{
 <body>
 
 <header>
- <div class="brand">▣ WebLinux</div>
- <div class="version">V86 / X86 VIRTUAL MACHINE</div>
+    <div class="brand">
+        <div class="logo">&gt;_</div>
+        WebLinux
+    </div>
+    <div class="version">V86 / BUILDROOT / X86</div>
 </header>
 
 <main>
 
- <div class="top">
-  <h2>Virtual Machine</h2>
-  <div class="status">
-   <span id="dot" class="dot"></span>
-   <span id="status">INITIALIZING</span>
-  </div>
- </div>
+    <div class="topbar">
+        <h2>Linux Virtual Machine</h2>
+        <div class="status">
+            <span class="dot" id="statusDot"></span>
+            <span id="statusText">INITIALIZING</span>
+        </div>
+    </div>
 
- <div class="terminal">
-  <div class="terminal-head">● ● ● &nbsp; root@weblinux: ~</div>
-  <div id="screen_container">
-   <div></div>
-   <canvas style="display:none"></canvas>
-  </div>
- </div>
+    <div class="terminal-box">
+        <div class="terminal-header">
+            <span class="traffic"></span>
+            <span class="traffic"></span>
+            <span class="traffic"></span>
+            <span class="terminal-name">root@weblinux: ~</span>
+        </div>
+        <div id="terminal"></div>
+    </div>
 
- <div id="message">Loading v86...</div>
+    <div class="info" id="message">
+        Initializing v86 engine...
+    </div>
 
- <div class="controls">
+    <div class="controls">
 
-  <section class="card">
-   <h3>Save Session</h3>
-   <p>現在のCPU・メモリ・仮想デバイスの状態を保存します。</p>
-   <button id="save" disabled>↓ 現在の状態を保存</button>
-  </section>
+        <div class="card">
+            <h3>Save Session</h3>
+            <p>
+                CPU・メモリ・デバイス・ターミナル表示を保存します。
+                linux_session.bin としてダウンロードします。
+            </p>
+            <button id="saveButton" disabled>
+                ↓ 現在の状態を保存
+            </button>
+        </div>
 
-  <section class="card">
-   <h3>Restore Session</h3>
-   <p>保存した linux_session.bin から再開します。</p>
-   <label class="file-label" for="restore">
-    ↑ 保存したファイルから再開
-   </label>
-   <input id="restore" type="file" accept=".bin">
-  </section>
+        <div class="card">
+            <h3>Restore Session</h3>
+            <p>
+                過去に保存したスナップショットを読み込み、
+                保存時点の状態に戻します。
+            </p>
+            <label class="file-label restore disabled" id="restoreLabel"
+                   for="restoreInput">
+                ↑ 保存したファイルから再開
+            </label>
+            <input type="file" id="restoreInput" accept=".bin">
+        </div>
 
- </div>
+    </div>
 
- <div class="notice">
-  <b>SESSION INFORMATION</b><br>
-  ・ブラウザ内で動作するx86 Linux環境です。<br>
-  ・ページをリロードすると実行状態は失われます。<br>
-  ・保存した linux_session.bin から復元できます。<br>
-  ・復元には同じv86バージョンと同じVM構成が必要です。<br>
-  ・初回起動時はLinuxのファイルシステムをダウンロードします。
- </div>
+    <div class="notice">
+        <strong>Session information</strong><br>
+        ・仮想マシンはブラウザ内で実行されます。<br>
+        ・ページをリロードすると、実行状態は失われます。<br>
+        ・保存した linux_session.bin から再開できます。<br>
+        ・復元には同じv86バージョンと同じ仮想マシン構成が必要です。<br>
+        ・Linuxは軽量なBuildrootベースの環境です。
+    </div>
 
 </main>
 
-<footer>WebLinux / Powered by v86</footer>
+<footer>
+    WebLinux · Powered by v86
+</footer>
 
 <script>
 "use strict";
 
-const ROOT = "https://copy.sh/v86/";
+/* ==========================================
+   CONFIGURATION
+========================================== */
 
 const CONFIG = {
-    wasm_path: ROOT + "build/v86.wasm",
+    wasm_path:
+        "https://cdn.jsdelivr.net/npm/v86@0.5.473/build/v86.wasm",
 
-    memory_size: 512 * 1024 * 1024,
-    vga_memory_size: 8 * 1024 * 1024,
-
-    screen_container:
-        document.getElementById("screen_container"),
+    memory_size: 64 * 1024 * 1024,
 
     bios: {
-        url: ROOT + "bios/seabios.bin"
+        url: "https://cdn.jsdelivr.net/gh/copy/v86@master/bios/seabios.bin"
     },
 
     vga_bios: {
-        url: ROOT + "bios/vgabios.bin"
+        url: "https://cdn.jsdelivr.net/gh/copy/v86@master/bios/vgabios.bin"
     },
 
-    filesystem: {
-        baseurl: ROOT + "images/alpine-rootfs-flat/",
-        basefs: ROOT + "images/alpine-fs.json"
+    bzimage: {
+        url: "https://static.simonwillison.net/static/cors-allow/2026/buildroot-bzimage68.bin",
+        async: false
     },
 
-    bzimage_initrd_from_filesystem: true,
+    filesystem: {},
 
-    cmdline:
-        "rw root=host9p rootfstype=9p " +
-        "rootflags=trans=virtio,cache=loose " +
-        "modules=virtio_pci tsc=reliable",
+    cmdline: "tsc=reliable mitigations=off random.trust_cpu=on",
+
+    disable_keyboard: true,
 
     autostart: true
 };
 
-const $ = id => document.getElementById(id);
+/* ==========================================
+   STATE
+========================================== */
 
 let emulator = null;
-let ready = false;
-let busy = false;
+let terminal = null;
+let fitAddon = null;
 
-function status(text, type = "") {
-    $("status").textContent = text;
-    $("dot").className = "dot " + type;
+let loaded = false;
+let busy = false;
+let restoring = false;
+
+let terminalHistory = "";
+
+const MAX_HISTORY = 512 * 1024;
+const SNAP_MAGIC = "WEB86S01";
+
+const encoder = new TextEncoder();
+
+/* ==========================================
+   UI
+========================================== */
+
+const saveButton = document.getElementById("saveButton");
+const restoreInput = document.getElementById("restoreInput");
+const restoreLabel = document.getElementById("restoreLabel");
+
+const statusDot = document.getElementById("statusDot");
+const statusText = document.getElementById("statusText");
+const message = document.getElementById("message");
+
+function status(text, type = "normal") {
+    statusText.textContent = text;
+    statusDot.className = "dot";
+
+    if (type === "running") {
+        statusDot.classList.add("running");
+    }
+
+    if (type === "error") {
+        statusDot.classList.add("error");
+    }
 }
 
-function message(text) {
-    $("message").textContent = text;
+function info(text) {
+    message.textContent = text;
 }
 
 function setBusy(value) {
     busy = value;
-    $("save").disabled = value || !ready;
-    $("restore").disabled = value;
+    saveButton.disabled = value || !loaded;
+    restoreInput.disabled = value;
+
+    restoreLabel.classList.toggle("disabled", value || !loaded);
 }
 
-function resetScreen() {
-    const screen = $("screen_container");
-    screen.replaceChildren();
+/* ==========================================
+   TERMINAL
+========================================== */
 
-    const text = document.createElement("div");
-    text.style.whiteSpace = "pre";
-    text.style.fontFamily = "monospace";
+function initializeTerminal() {
+    if (!window.Terminal || !window.FitAddon) {
+        throw new Error("xterm.js failed to load.");
+    }
 
-    const canvas = document.createElement("canvas");
-    canvas.style.display = "none";
+    terminal = new Terminal({
+        cursorBlink: true,
+        convertEol: true,
+        scrollback: 3000,
+        fontSize: 13,
+        fontFamily:
+            '"SFMono-Regular", Consolas, "Liberation Mono", monospace',
 
-    screen.append(text, canvas);
+        theme: {
+            background: "#000000",
+            foreground: "#d8fce7",
+            cursor: "#38d99b",
+            selectionBackground: "#245b44"
+        }
+    });
+
+    fitAddon = new FitAddon.FitAddon();
+
+    terminal.loadAddon(fitAddon);
+
+    terminal.open(document.getElementById("terminal"));
+
+    fitAddon.fit();
+
+    terminal.onData(function(data) {
+        if (!emulator || !loaded || busy || restoring) {
+            return;
+        }
+
+        try {
+            emulator.serial0_send(data);
+        } catch (e) {
+            console.error("Terminal input error:", e);
+        }
+    });
+
+    terminal.onResize(function(size) {
+        // The guest is a serial-console system.
+        // No VGA keyboard or mouse is required.
+    });
+
+    window.addEventListener("resize", function() {
+        try {
+            fitAddon.fit();
+        } catch (e) {}
+    });
+
+    terminal.focus();
 }
 
-function waitForReady(vm) {
-    return new Promise((resolve, reject) => {
-        let completed = false;
+function recordTerminalByte(byte) {
+    terminalHistory += String.fromCharCode(byte);
 
-        const timeout = setTimeout(() => {
-            if (!completed) {
-                completed = true;
-                reject(new Error(
-                    "VM initialization timed out. Check network and CORS."
-                ));
+    if (terminalHistory.length > MAX_HISTORY) {
+        const excess = terminalHistory.length - MAX_HISTORY;
+        const newline = terminalHistory.indexOf("\n", excess);
+
+        terminalHistory = terminalHistory.slice(
+            newline >= 0 ? newline + 1 : excess
+        );
+    }
+}
+
+function latin1ToBytes(str) {
+    const result = new Uint8Array(str.length);
+
+    for (let i = 0; i < str.length; i++) {
+        result[i] = str.charCodeAt(i) & 255;
+    }
+
+    return result;
+}
+
+function bytesToLatin1(bytes) {
+    let output = "";
+
+    for (let i = 0; i < bytes.length; i += 8192) {
+        output += String.fromCharCode(
+            ...bytes.subarray(i, i + 8192)
+        );
+    }
+
+    return output;
+}
+
+function restoreTerminalHistory(bytes) {
+    terminalHistory = bytesToLatin1(bytes);
+
+    terminal.reset();
+
+    if (bytes.length) {
+        terminal.write(bytes);
+    }
+}
+
+/* ==========================================
+   VM INITIALIZATION
+========================================== */
+
+function initializeVM() {
+    return new Promise(function(resolve, reject) {
+        try {
+            const V86Constructor = window.V86 || window.V86Starter;
+
+            if (!V86Constructor) {
+                throw new Error("v86 library is unavailable.");
             }
-        }, 180000);
 
-        vm.add_listener("emulator-ready", () => {
-            if (completed) return;
-            completed = true;
-            clearTimeout(timeout);
-            resolve();
-        });
+            loaded = false;
+            status("INITIALIZING");
+            info("Downloading v86 WebAssembly and BIOS...");
+
+            emulator = new V86Constructor(CONFIG);
+
+            emulator.add_listener("download-progress", function(event) {
+                const name = event.file_name || "VM resource";
+
+                let progress = "";
+
+                if (event.lengthComputable && event.total > 0) {
+                    progress =
+                        " " +
+                        Math.round(event.loaded / event.total * 100) +
+                        "%";
+                }
+
+                info("Downloading: " + name + progress);
+            });
+
+            emulator.add_listener("download-error", function(event) {
+                const req = event && event.request;
+                const httpStatus = req && req.status;
+
+                const reason = httpStatus
+                    ? "HTTP " + httpStatus
+                    : "Network / CORS error";
+
+                status("DOWNLOAD ERROR", "error");
+
+                info(
+                    "Resource download failed: " +
+                    (event.file_name || "unknown") +
+                    " (" + reason + ")"
+                );
+            });
+
+            emulator.add_listener("serial0-output-byte", function(byte) {
+                const value = byte & 255;
+
+                recordTerminalByte(value);
+
+                terminal.write(Uint8Array.of(value));
+            });
+
+            emulator.add_listener("emulator-loaded", function() {
+                loaded = true;
+
+                status("RUNNING", "running");
+                info("Linux booted. Terminal is ready.");
+
+                setBusy(false);
+                terminal.focus();
+
+                resolve(emulator);
+            });
+
+            emulator.add_listener("emulator-stopped", function() {
+                if (!restoring) {
+                    status("STOPPED");
+                }
+            });
+
+            setTimeout(function() {
+                if (!loaded && emulator) {
+                    status("BOOT TIMEOUT", "error");
+
+                    info(
+                        "Boot is taking too long. Check browser console, " +
+                        "CORS permissions and network access."
+                    );
+                }
+            }, 90000);
+
+        } catch (error) {
+            reject(error);
+        }
     });
 }
 
-async function createVM() {
-    if (typeof V86 === "undefined") {
-        throw new Error(
-            "v86.js not loaded. Check the script URL."
-        );
+/* ==========================================
+   SNAPSHOT FORMAT
+
+   8 bytes: Magic
+   4 bytes: Terminal history length (LE)
+   N bytes: Terminal history (raw bytes)
+   Rest:    v86 save_state() binary
+
+========================================== */
+
+function createSnapshot(vmBuffer) {
+    const history = latin1ToBytes(terminalHistory);
+    const vmState = new Uint8Array(vmBuffer);
+
+    const HEADER_SIZE = 12;
+
+    const result = new Uint8Array(
+        HEADER_SIZE + history.length + vmState.length
+    );
+
+    for (let i = 0; i < SNAP_MAGIC.length; i++) {
+        result[i] = SNAP_MAGIC.charCodeAt(i);
     }
 
-    resetScreen();
-    ready = false;
+    new DataView(result.buffer).setUint32(
+        8,
+        history.length,
+        true
+    );
 
-    status("INITIALIZING");
-    message("Loading BIOS, WebAssembly and Linux filesystem...");
+    result.set(history, HEADER_SIZE);
 
-    const vm = new V86(CONFIG);
+    result.set(
+        vmState,
+        HEADER_SIZE + history.length
+    );
 
-    emulator = vm;
-
-    vm.add_listener("download-progress", info => {
-        if (!info) return;
-
-        const percent =
-            info.lengthComputable && info.total
-            ? Math.round(info.loaded / info.total * 100) + "%"
-            : "";
-
-        message(
-            "Downloading: " +
-            (info.file_name || "resource") +
-            " " + percent
-        );
-    });
-
-    vm.add_listener("download-error", info => {
-        console.error("Download error:", info);
-        status("DOWNLOAD ERROR", "err");
-        message("Download failed: " + JSON.stringify(info));
-    });
-
-    vm.add_listener("emulator-started", () => {
-        if (emulator !== vm) return;
-        status("RUNNING", "ok");
-        message("Linux is running.");
-    });
-
-    vm.add_listener("emulator-stopped", () => {
-        if (emulator !== vm) return;
-        status("STOPPED");
-    });
-
-    await waitForReady(vm);
-
-    if (emulator !== vm) {
-        throw new Error("VM instance changed.");
-    }
-
-    ready = true;
-    setBusy(false);
-
-    status("RUNNING", "ok");
-    message("Virtual machine ready.");
-
-    return vm;
+    return result;
 }
 
-/* Save */
+function parseSnapshot(buffer) {
+    const bytes = new Uint8Array(buffer);
 
-$("save").addEventListener("click", async () => {
-    if (!emulator || !ready || busy) return;
+    const magic = String.fromCharCode(
+        ...bytes.subarray(0, 8)
+    );
+
+    if (magic !== SNAP_MAGIC) {
+        // Backward compatibility:
+        // Accept a raw v86 save_state() file too.
+        return {
+            state: buffer,
+            history: null
+        };
+    }
+
+    if (bytes.length < 13) {
+        throw new Error("Snapshot file is incomplete.");
+    }
+
+    const historyLength = new DataView(
+        bytes.buffer,
+        bytes.byteOffset,
+        bytes.byteLength
+    ).getUint32(8, true);
+
+    const stateOffset = 12 + historyLength;
+
+    if (
+        stateOffset >= bytes.length ||
+        historyLength > MAX_HISTORY
+    ) {
+        throw new Error("Invalid snapshot structure.");
+    }
+
+    const history = bytes.slice(12, stateOffset);
+
+    const state = bytes.slice(stateOffset).buffer;
+
+    return {
+        state,
+        history
+    };
+}
+
+/* ==========================================
+   SAVE
+========================================== */
+
+saveButton.addEventListener("click", async function() {
+    if (!emulator || !loaded || busy) return;
 
     try {
         setBusy(true);
-        status("SAVING");
-        message("Saving virtual machine state...");
 
-        const state = await emulator.save_state();
+        status("SAVING");
+        info("Capturing complete virtual machine state...");
+
+        const vmBuffer = await emulator.save_state();
+
+        const snapshot = createSnapshot(vmBuffer);
 
         const blob = new Blob(
-            [state],
+            [snapshot],
             { type: "application/octet-stream" }
         );
 
         const url = URL.createObjectURL(blob);
-        const a = document.createElement("a");
 
-        a.href = url;
-        a.download = "linux_session.bin";
+        const link = document.createElement("a");
 
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
+        link.href = url;
+        link.download = "linux_session.bin";
 
-        setTimeout(() => URL.revokeObjectURL(url), 60000);
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
 
-        status("RUNNING", "ok");
+        setTimeout(function() {
+            URL.revokeObjectURL(url);
+        }, 30000);
 
-        message(
-            "Saved: " +
-            (state.byteLength / 1048576).toFixed(2) +
+        status("RUNNING", "running");
+
+        info(
+            "Snapshot saved: " +
+            (snapshot.length / 1048576).toFixed(2) +
             " MB"
         );
 
-    } catch (e) {
-        console.error(e);
-        status("SAVE ERROR", "err");
-        message(e.message);
+    } catch (error) {
+        console.error(error);
+
+        status("SAVE ERROR", "error");
+        info(error.message);
 
     } finally {
         setBusy(false);
     }
 });
 
-/* Restore */
+/* ==========================================
+   RESTORE
+========================================== */
 
-$("restore").addEventListener("change", async event => {
-    const file = event.target.files[0];
+restoreInput.addEventListener("change", async function(event) {
+    const file = event.target.files?.[0];
 
-    if (!file || busy || !emulator || !ready) {
-        event.target.value = "";
+    if (!file || !emulator || !loaded || busy) {
         return;
     }
 
     try {
         setBusy(true);
-        status("READING");
+        restoring = true;
 
-        message("Reading " + file.name + "...");
+        status("READING SNAPSHOT");
+        info("Reading " + file.name + "...");
 
-        const buffer = await file.arrayBuffer();
+        const fileBuffer = await file.arrayBuffer();
 
-        if (!buffer.byteLength) {
-            throw new Error("Empty state file.");
+        const snapshot = parseSnapshot(fileBuffer);
+
+        if (!snapshot.state || snapshot.state.byteLength === 0) {
+            throw new Error("Empty VM state.");
         }
 
-        message("Stopping current virtual machine...");
+        status("STOPPING VM");
+        info("Stopping current virtual machine...");
 
         await emulator.stop();
 
         status("RESTORING");
-        message("Restoring CPU, memory and devices...");
+        info("Restoring CPU, RAM and virtual devices...");
 
-        await emulator.restore_state(buffer);
+        await emulator.restore_state(snapshot.state);
+
+        if (snapshot.history !== null) {
+            restoreTerminalHistory(snapshot.history);
+        }
+
+        info("Restarting restored VM...");
 
         emulator.run();
 
-        status("RUNNING", "ok");
-        message("Session successfully restored.");
+        status("RUNNING", "running");
 
-    } catch (e) {
-        console.error(e);
-        status("RESTORE ERROR", "err");
-        message("Restore failed: " + e.message);
+        info("Session restored successfully.");
+
+        terminal.focus();
+
+    } catch (error) {
+        console.error("Restore error:", error);
+
+        status("RESTORE ERROR", "error");
+        info("Restore failed: " + error.message);
 
     } finally {
-        event.target.value = "";
+        restoring = false;
+        restoreInput.value = "";
         setBusy(false);
     }
 });
 
-/* Automatic startup */
+/* ==========================================
+   STARTUP
+========================================== */
 
-(async function boot() {
+window.addEventListener("DOMContentLoaded", async function() {
     try {
-        if (typeof V86 === "undefined") {
-            throw new Error(
-                "Cannot load v86.js from copy.sh"
-            );
-        }
+        initializeTerminal();
 
-        await createVM();
+        info("Initializing virtual machine...");
 
-    } catch (e) {
-        console.error("Boot error:", e);
+        await initializeVM();
 
-        ready = false;
-        status("BOOT ERROR", "err");
-        message(e.message);
+    } catch (error) {
+        console.error("Initialization error:", error);
 
-        $("save").disabled = true;
+        status("INITIALIZATION ERROR", "error");
+        info(error.message);
+
         setBusy(false);
     }
-})();
+});
 
 </script>
+
 </body>
 </html>
