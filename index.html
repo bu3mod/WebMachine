@@ -21,40 +21,29 @@
     --red: #ff7777;
 }
 
-* {
-    box-sizing: border-box;
-}
+* { box-sizing: border-box; }
 
 body {
     margin: 0;
-    padding: 18px;
+    padding: 16px;
     background: var(--bg);
     color: var(--text);
     font-family: system-ui, -apple-system, sans-serif;
 }
 
-button, input, select {
-    font: inherit;
-}
-
-button {
-    cursor: pointer;
-}
-
-button:disabled {
-    opacity: .4;
-    cursor: not-allowed;
-}
+button, input, select { font: inherit; }
+button { cursor: pointer; }
+button:disabled { opacity: .4; cursor: not-allowed; }
 
 .app {
-    max-width: 1100px;
+    max-width: 1150px;
     margin: auto;
 }
 
 header {
     display: flex;
-    justify-content: space-between;
     align-items: center;
+    justify-content: space-between;
     gap: 12px;
     margin-bottom: 20px;
 }
@@ -69,7 +58,6 @@ header {
 h1 {
     margin: 5px 0;
     font-size: 24px;
-    letter-spacing: -.04em;
 }
 
 .subtitle {
@@ -95,18 +83,14 @@ h1 {
     background: #6c778a;
 }
 
-.dot.good {
-    background: var(--green);
-}
-
-.dot.bad {
-    background: var(--red);
-}
+.dot.good { background: var(--green); }
+.dot.bad { background: var(--red); }
 
 .layout {
     display: grid;
-    grid-template-columns: 330px minmax(0, 1fr);
+    grid-template-columns: 340px minmax(0, 1fr);
     gap: 15px;
+    align-items: start;
 }
 
 .panel {
@@ -123,9 +107,7 @@ h1 {
     margin-bottom: 14px;
 }
 
-.field {
-    margin-bottom: 19px;
-}
+.field { margin-bottom: 19px; }
 
 .field-label {
     display: block;
@@ -148,8 +130,8 @@ h1 {
 
 .file-input::file-selector-button {
     min-height: 32px;
-    margin-right: 10px;
-    padding: 0 12px;
+    margin-right: 8px;
+    padding: 0 10px;
     border: 0;
     border-radius: 6px;
     background: var(--accent);
@@ -177,9 +159,10 @@ h1 {
     color: var(--muted);
 }
 
-.picker-debug {
+.debug {
     margin-top: 8px;
     font-size: 11px;
+    line-height: 1.6;
     color: var(--muted);
     overflow-wrap: anywhere;
 }
@@ -238,17 +221,10 @@ select {
     border-color: var(--accent);
 }
 
-.btn.danger {
-    color: #ff9999;
-}
+.btn.danger { color: #ff9999; }
+.btn.full { width: 100%; }
 
-.btn.full {
-    width: 100%;
-}
-
-.screen-panel {
-    padding: 13px;
-}
+.screen-panel { padding: 13px; }
 
 .screen-heading {
     display: flex;
@@ -257,9 +233,7 @@ select {
     margin-bottom: 12px;
 }
 
-.screen-heading .section-title {
-    margin: 0;
-}
+.screen-heading .section-title { margin: 0; }
 
 .screen-wrap {
     position: relative;
@@ -285,7 +259,6 @@ select {
 }
 
 #screen_container canvas {
-    display: none;
     max-width: 100%;
     height: auto;
     image-rendering: pixelated;
@@ -306,13 +279,8 @@ select {
     padding: 20px;
 }
 
-.placeholder.hidden {
-    display: none;
-}
-
-.placeholder .symbol {
-    font-size: 30px;
-}
+.placeholder.hidden { display: none; }
+.placeholder .symbol { font-size: 30px; }
 
 .keyboard-row {
     display: flex;
@@ -332,8 +300,8 @@ select {
 }
 
 #log {
-    min-height: 100px;
-    max-height: 220px;
+    min-height: 110px;
+    max-height: 240px;
     overflow: auto;
     padding: 11px;
     border: 1px solid var(--border);
@@ -353,22 +321,10 @@ select {
 }
 
 @media(max-width: 760px) {
-    body {
-        padding: 12px;
-    }
-
-    .layout {
-        grid-template-columns: 1fr;
-    }
-
-    h1 {
-        font-size: 21px;
-    }
-
-    .screen-wrap,
-    #screen_container {
-        min-height: 250px;
-    }
+    body { padding: 12px; }
+    .layout { grid-template-columns: 1fr; }
+    h1 { font-size: 21px; }
+    .screen-wrap, #screen_container { min-height: 250px; }
 }
 </style>
 </head>
@@ -380,18 +336,17 @@ select {
     <div>
         <div class="eyebrow">BROWSER VIRTUALIZATION</div>
         <h1>Browser Linux VM</h1>
-        <div class="subtitle">Standalone x86 Virtual Machine</div>
+        <div class="subtitle">Local ISO · x86 Emulator · Session Manager</div>
     </div>
 
     <div class="status">
         <span class="dot" id="statusDot"></span>
-        <span id="statusText">Ready</span>
+        <span id="statusText">Initializing...</span>
     </div>
 </header>
 
 <div class="layout">
 
-<!-- CONFIGURATION -->
 <section class="panel">
 
     <div class="section-title">01 / ISO IMAGE</div>
@@ -401,14 +356,21 @@ select {
             Select operating system ISO
         </label>
 
-        <!-- Native file input: Do not hide or overlay this element. -->
         <input
             class="file-input"
             type="file"
             id="isoInput"
-            accept="*/*"
-            onchange="window.onIsoSelected(this)"
+            accept=".iso,application/octet-stream,*/*"
         >
+
+        <button
+            type="button"
+            class="btn primary full"
+            id="confirmISO"
+            style="margin-top:10px"
+        >
+            Use selected ISO
+        </button>
 
         <div class="file-display">
             <div class="file-name" id="isoName">
@@ -419,8 +381,8 @@ select {
             </div>
         </div>
 
-        <div class="picker-debug" id="pickerDebug">
-            File picker event: waiting
+        <div class="debug" id="fileDebug">
+            JavaScript: starting...
         </div>
     </div>
 
@@ -445,18 +407,16 @@ select {
         </label>
 
         <select id="nicType">
-            <option value="virtio" selected>VirtIO</option>
-            <option value="ne2k">NE2000</option>
+            <option value="ne2k" selected>NE2000</option>
         </select>
 
         <label class="check">
-            <input type="checkbox" id="networkEnabled" checked>
-            Enable network
+            <input type="checkbox" id="networkEnabled">
+            Enable network (experimental)
         </label>
 
         <div class="hint">
-            Network access requires a supported guest driver
-            and a working public relay.
+            Network requires guest drivers and a working relay.
         </div>
     </div>
 
@@ -498,17 +458,16 @@ select {
         class="file-input"
         type="file"
         id="restoreInput"
-        accept="*/*"
+        accept=".bin,*/*"
         disabled
     >
 
     <div class="hint">
-        Start the same ISO with matching settings before restoring.
+        Restore into a compatible VM configuration.
     </div>
 
 </section>
 
-<!-- DISPLAY -->
 <section class="panel screen-panel">
 
     <div class="screen-heading">
@@ -522,7 +481,7 @@ select {
 
         <div id="screen_container" tabindex="0">
             <div></div>
-            <canvas style="display:none"></canvas>
+            <canvas></canvas>
         </div>
 
         <div class="placeholder" id="placeholder">
@@ -547,24 +506,22 @@ select {
 
     <div class="hint">
         Click the display to focus the virtual keyboard.
-        Text input uses a US keyboard layout.
     </div>
 
     <div class="section-title" style="margin-top:20px">
         SYSTEM LOG
     </div>
 
-    <pre id="log">Application initialized.
-Waiting for ISO selection...</pre>
+    <pre id="log">HTML loaded.
+Waiting for JavaScript...</pre>
 
 </section>
 </div>
 
 <div class="footer">
-    Runs entirely in your browser. The ISO is read locally and is not
-    uploaded to a server by this page.
-    Reloading the page destroys the running VM unless you save its state.
-    v86 emulates 16-bit and 32-bit x86 systems, not x86_64.
+    Runs in your browser. The ISO is read locally.
+    Reloading the page destroys the running VM unless its state is saved.
+    v86 supports x86 systems, not x86_64 guest operating systems.
 </div>
 
 </div>
@@ -573,15 +530,22 @@ Waiting for ISO selection...</pre>
 "use strict";
 
 /* =====================================================
+   EARLY JAVASCRIPT DIAGNOSTIC
+===================================================== */
+
+document.getElementById("fileDebug").textContent =
+    "JavaScript: RUNNING";
+
+/* =====================================================
    DOM
 ===================================================== */
 
-const $ = (id) => document.getElementById(id);
+const $ = id => document.getElementById(id);
 
 const isoInput = $("isoInput");
 const isoName = $("isoName");
 const isoMeta = $("isoMeta");
-const pickerDebug = $("pickerDebug");
+const fileDebug = $("fileDebug");
 
 const startButton = $("startButton");
 const stopButton = $("stopButton");
@@ -611,10 +575,20 @@ let emulator = null;
 let emulatorReady = false;
 let emulatorStarting = false;
 let assetBase = null;
+let lastFileKey = "";
 
 /* =====================================================
-   HELPERS
+   LOGGING
 ===================================================== */
+
+function log(message) {
+    const time = new Date().toLocaleTimeString();
+
+    logElement.textContent +=
+        "\n[" + time + "] " + message;
+
+    logElement.scrollTop = logElement.scrollHeight;
+}
 
 function setStatus(message, type = "normal") {
     statusText.textContent = message;
@@ -629,27 +603,22 @@ function setStatus(message, type = "normal") {
     }
 }
 
-function log(message) {
-    const time = new Date().toLocaleTimeString();
-
-    logElement.textContent +=
-        "\n[" + time + "] " + message;
-
-    logElement.scrollTop = logElement.scrollHeight;
-}
-
 function formatBytes(bytes) {
     const units = ["B", "KB", "MB", "GB"];
     let size = bytes;
     let index = 0;
 
-    while (size >= 1024 && index < 3) {
+    while (size >= 1024 && index < units.length - 1) {
         size /= 1024;
         index++;
     }
 
     return size.toFixed(2) + " " + units[index];
 }
+
+/* =====================================================
+   UI
+===================================================== */
 
 function updateUI() {
     const hasVM = Boolean(emulator);
@@ -675,6 +644,7 @@ function updateUI() {
     sendButton.disabled = !ready;
 
     isoInput.disabled = hasVM || emulatorStarting;
+    $("confirmISO").disabled = hasVM || emulatorStarting;
 
     $("memorySize").disabled = hasVM || emulatorStarting;
     $("nicType").disabled = hasVM || emulatorStarting;
@@ -682,114 +652,137 @@ function updateUI() {
 }
 
 /* =====================================================
-   FILE SELECTION
-   This is deliberately a global function because the
-   HTML input uses an inline onchange handler.
+   ISO FILE HANDLING
 ===================================================== */
 
-window.onIsoSelected = function(input) {
-    pickerDebug.textContent =
-        "File picker event: CHANGE EVENT RECEIVED";
+function captureISO(source) {
+    let file = null;
 
-    log("File input change event received.");
-
-    if (!input || !input.files) {
-        pickerDebug.textContent =
-            "ERROR: File input is unavailable.";
-        return;
+    if (source && source.files && source.files.length > 0) {
+        file = source.files[0];
     }
 
-    const file = input.files.item(0);
+    if (!file && isoInput.files && isoInput.files.length > 0) {
+        file = isoInput.files[0];
+    }
 
     if (!file) {
-        pickerDebug.textContent =
-            "No file returned. Selection may have been cancelled.";
+        fileDebug.textContent =
+            "No File object found in input.files.";
 
-        log("No file returned by the picker.");
-        return;
+        log("ISO capture failed: input.files is empty.");
+        return false;
     }
 
+    if (file.size <= 0) {
+        fileDebug.textContent = "ERROR: File is empty.";
+        return false;
+    }
+
+    const fileKey = [
+        file.name,
+        file.size,
+        file.lastModified
+    ].join(":");
+
     selectedISO = file;
+    lastFileKey = fileKey;
 
     isoName.textContent = file.name;
     isoMeta.textContent =
         formatBytes(file.size) +
         (file.type ? " · " + file.type : "");
 
-    pickerDebug.textContent =
-        "SUCCESS: Browser received the selected file.";
+    fileDebug.textContent =
+        "SUCCESS: File captured by JavaScript.";
 
     setStatus("ISO selected", "good");
 
     log(
-        "Selected: " +
+        "ISO selected: " +
         file.name +
-        " (" +
-        formatBytes(file.size) +
-        ")"
+        " (" + formatBytes(file.size) + ")"
     );
 
-    if (file.size === 0) {
-        selectedISO = null;
-
-        setStatus("Empty file", "bad");
-        pickerDebug.textContent = "ERROR: File size is zero.";
-
-        log("ERROR: Selected file is empty.");
-    }
-
     updateUI();
-
-    /*
-     * Reset native input after retaining the File object.
-     * This allows choosing the same file again later.
-     */
-    input.value = "";
-};
-
-/* =====================================================
-   READ LOCAL FILE
-===================================================== */
-
-function readFile(file) {
-    return new Promise((resolve, reject) => {
-        if (!file) {
-            reject(new Error("No file selected."));
-            return;
-        }
-
-        if (typeof file.arrayBuffer === "function") {
-            file.arrayBuffer().then(resolve, reject);
-            return;
-        }
-
-        const reader = new FileReader();
-
-        reader.onload = () => resolve(reader.result);
-        reader.onerror = () => {
-            reject(reader.error || new Error("File read error"));
-        };
-
-        reader.readAsArrayBuffer(file);
-    });
+    return true;
 }
 
+/*
+ * Normal browser events.
+ */
+isoInput.addEventListener("change", function(event) {
+    log("File input CHANGE event received.");
+    captureISO(event.currentTarget);
+});
+
+isoInput.addEventListener("input", function(event) {
+    log("File input INPUT event received.");
+    captureISO(event.currentTarget);
+});
+
+/*
+ * Manual confirmation.
+ */
+$("confirmISO").addEventListener("click", function() {
+    if (!captureISO(isoInput)) {
+        fileDebug.textContent =
+            "ERROR: No file found. Please choose the ISO again.";
+    }
+});
+
+/*
+ * Android browser fallback:
+ * Some browsers return to the page after the picker closes.
+ */
+window.addEventListener("focus", function() {
+    setTimeout(function() {
+        if (isoInput.files && isoInput.files.length > 0) {
+            captureISO(isoInput);
+        }
+    }, 500);
+});
+
+document.addEventListener("visibilitychange", function() {
+    if (!document.hidden) {
+        setTimeout(function() {
+            if (isoInput.files && isoInput.files.length > 0) {
+                captureISO(isoInput);
+            }
+        }, 500);
+    }
+});
+
+/*
+ * Polling fallback.
+ * Do not clear isoInput.value after selecting the file.
+ */
+setInterval(function() {
+    if (
+        !emulator &&
+        isoInput.files &&
+        isoInput.files.length > 0
+    ) {
+        const file = isoInput.files[0];
+
+        const key = [
+            file.name,
+            file.size,
+            file.lastModified
+        ].join(":");
+
+        if (key !== lastFileKey) {
+            captureISO(isoInput);
+        }
+    }
+}, 700);
+
 /* =====================================================
-   LOAD V86
+   V86 LIBRARY
 ===================================================== */
 
-const SOURCES = [
-    {
-        name: "Official copy.sh",
-        script: "https://copy.sh/v86/build/libv86.js",
-        base: "https://copy.sh/v86/"
-    },
-    {
-        name: "jsDelivr",
-        script: "https://cdn.jsdelivr.net/gh/copy/v86@master/build/libv86.js",
-        base: "https://cdn.jsdelivr.net/gh/copy/v86@master/"
-    }
-];
+const V86_BASE =
+    "https://copy.sh/v86/";
 
 function loadScript(url) {
     return new Promise((resolve, reject) => {
@@ -798,27 +791,27 @@ function loadScript(url) {
         const timeout = setTimeout(() => {
             script.remove();
             reject(new Error("Script timeout: " + url));
-        }, 25000);
+        }, 30000);
 
         script.src = url;
         script.async = true;
         script.crossOrigin = "anonymous";
 
-        script.onload = () => {
+        script.onload = function() {
             clearTimeout(timeout);
 
             if (typeof window.V86 === "function") {
                 resolve();
             } else {
-                script.remove();
-                reject(new Error("V86 constructor not found."));
+                reject(
+                    new Error("V86 constructor was not found.")
+                );
             }
         };
 
-        script.onerror = () => {
+        script.onerror = function() {
             clearTimeout(timeout);
-            script.remove();
-            reject(new Error("Failed to load script: " + url));
+            reject(new Error("Could not load " + url));
         };
 
         document.head.appendChild(script);
@@ -826,32 +819,41 @@ function loadScript(url) {
 }
 
 async function ensureV86() {
-    if (typeof window.V86 === "function" && assetBase) {
+    if (typeof window.V86 === "function") {
+        assetBase = V86_BASE;
         return;
     }
 
-    for (const source of SOURCES) {
+    setStatus("Loading v86 library...");
+    log("Loading v86 JavaScript...");
+
+    const sources = [
+        "https://copy.sh/v86/build/libv86.js",
+        "https://cdn.jsdelivr.net/gh/copy/v86@master/build/libv86.js"
+    ];
+
+    let lastError = null;
+
+    for (const url of sources) {
         try {
-            log("Loading v86 from " + source.name);
-            setStatus("Loading v86 library...");
+            log("Trying: " + url);
+            await loadScript(url);
 
-            await loadScript(source.script);
-
-            assetBase = source.base;
-
-            log("v86 loaded: " + source.name);
+            assetBase = V86_BASE;
+            log("v86 library loaded.");
             return;
 
         } catch (error) {
-            log("Source failed: " + error.message);
+            lastError = error;
+            log("CDN error: " + error.message);
         }
     }
 
-    throw new Error("Could not load v86 from any source.");
+    throw lastError || new Error("Unable to load v86.");
 }
 
 /* =====================================================
-   BOOT VM
+   VM BOOT
 ===================================================== */
 
 async function bootVM() {
@@ -864,13 +866,11 @@ async function bootVM() {
         return;
     }
 
-    if (emulator) {
-        return;
-    }
+    if (emulator) return;
 
     if (!selectedISO) {
         setStatus("No ISO selected", "bad");
-        log("Please select an ISO file first.");
+        log("No ISO selected. Select a file first.");
         return;
     }
 
@@ -878,26 +878,16 @@ async function bootVM() {
     updateUI();
 
     try {
-        setStatus("Reading ISO...");
-        log("Reading ISO: " + selectedISO.name);
-
-        const isoBuffer = await readFile(selectedISO);
-
-        if (!(isoBuffer instanceof ArrayBuffer)) {
-            throw new Error("ISO was not read as ArrayBuffer.");
-        }
-
-        if (isoBuffer.byteLength === 0) {
-            throw new Error("ISO is empty.");
-        }
-
-        log("ISO loaded: " + formatBytes(isoBuffer.byteLength));
+        setStatus("Preparing ISO...");
+        log("Preparing " + selectedISO.name);
 
         await ensureV86();
 
-        setStatus("Creating virtual machine...");
-        log("Preparing virtual hardware.");
-
+        /*
+         * IMPORTANT:
+         * v86 accepts a File object as the buffer value.
+         * This avoids an unnecessary extra full-size copy.
+         */
         const options = {
             wasm_path: assetBase + "build/v86.wasm",
 
@@ -918,25 +908,13 @@ async function bootVM() {
             },
 
             cdrom: {
-                buffer: isoBuffer
+                buffer: selectedISO
             },
 
-            boot_order: 0x213,
-
-            autostart: false,
-
-            disable_keyboard: false,
-            disable_mouse: false,
-            disable_speaker: false
+            autostart: false
         };
 
-        if ($("networkEnabled").checked) {
-            options.net_device = {
-                type: $("nicType").value,
-                relay_url: "wss://relay.widgetry.org/"
-            };
-        }
-
-        const vm = new window.V86(options);
-
-    
+        /*
+         * Network is optional and disabled by default.
+         */
+        if
