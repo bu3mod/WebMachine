@@ -3,252 +3,261 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#090b10">
 <title>WebLinux | Virtual Machine</title>
 
-<link rel="stylesheet"
- href="https://cdn.jsdelivr.net/npm/@xterm/xterm@5.5.0/css/xterm.css">
-
-<script defer src="https://cdn.jsdelivr.net/npm/v86@0.5.473/build/libv86.js"></script>
-<script defer src="https://cdn.jsdelivr.net/npm/@xterm/xterm@5.5.0/lib/xterm.js"></script>
-<script defer src="https://cdn.jsdelivr.net/npm/@xterm/addon-fit@0.10.0/lib/addon-fit.js"></script>
+<script src="https://cdn.jsdelivr.net/gh/copy/v86@master/build/libv86.js"></script>
 
 <style>
-:root {
-    color-scheme: dark;
-    --bg: #090b10;
-    --panel: #111720;
-    --border: #252e3c;
-    --green: #38d99b;
-    --muted: #8290a2;
-    --text: #e8edf5;
+*{box-sizing:border-box}
+
+:root{
+    color-scheme:dark;
+    --bg:#090b10;
+    --panel:#121923;
+    --border:#293343;
+    --green:#39d99b;
+    --muted:#8a99ad;
+    --text:#e8edf5;
 }
 
-* { box-sizing: border-box; }
-
-body {
-    margin: 0;
-    min-height: 100vh;
-    background: var(--bg);
-    color: var(--text);
-    font-family: system-ui, sans-serif;
+body{
+    margin:0;
+    background:var(--bg);
+    color:var(--text);
+    font-family:system-ui,sans-serif;
 }
 
-header {
-    height: 65px;
-    padding: 0 22px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    background: #0d1118;
-    border-bottom: 1px solid var(--border);
+header{
+    height:64px;
+    padding:0 20px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    background:#10151d;
+    border-bottom:1px solid var(--border);
 }
 
-.brand {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    font-weight: 750;
-    font-size: 17px;
+.brand{
+    font-size:18px;
+    font-weight:750;
 }
 
-.logo {
-    width: 34px;
-    height: 34px;
-    display: grid;
-    place-items: center;
-    border-radius: 9px;
-    background: #143b30;
-    color: var(--green);
-    font-family: monospace;
+.brand span{color:var(--green)}
+
+.version{
+    font:11px monospace;
+    color:var(--muted);
 }
 
-.version {
-    font: 11px monospace;
-    color: var(--muted);
+main{
+    width:min(100%,1050px);
+    margin:auto;
+    padding:22px 14px;
 }
 
-main {
-    width: min(100%, 1050px);
-    margin: auto;
-    padding: 25px 16px;
+.top{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    margin-bottom:14px;
 }
 
-.topbar {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 14px;
+h2{font-size:14px;margin:0}
+
+.status{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    font:11px monospace;
+    color:var(--muted);
 }
 
-.topbar h2 {
-    font-size: 14px;
-    margin: 0;
+.dot{
+    width:8px;
+    height:8px;
+    border-radius:50%;
+    background:#64748b;
 }
 
-.status {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    color: var(--muted);
-    font: 11px monospace;
+.dot.running{
+    background:var(--green);
+    box-shadow:0 0 10px var(--green);
 }
 
-.dot {
-    width: 8px;
-    height: 8px;
-    background: #677386;
-    border-radius: 50%;
+.dot.error{background:#ff5555}
+
+.terminal{
+    border:1px solid var(--border);
+    border-radius:11px;
+    overflow:hidden;
+    background:#000;
 }
 
-.dot.running {
-    background: var(--green);
-    box-shadow: 0 0 10px var(--green);
+.terminal-head{
+    height:38px;
+    display:flex;
+    align-items:center;
+    gap:7px;
+    padding:0 13px;
+    background:#171e29;
 }
 
-.dot.error {
-    background: #ff5555;
+.traffic{
+    width:9px;
+    height:9px;
+    border-radius:50%;
 }
 
-.terminal-box {
-    background: #000;
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    overflow: hidden;
+.traffic:nth-child(1){background:#ff6259}
+.traffic:nth-child(2){background:#ffbd44}
+.traffic:nth-child(3){background:#35c978}
+
+.terminal-title{
+    margin-left:9px;
+    color:#9ba9bc;
+    font:11px monospace;
 }
 
-.terminal-header {
-    height: 39px;
-    display: flex;
-    align-items: center;
-    gap: 7px;
-    padding: 0 14px;
-    background: #151b25;
-    border-bottom: 1px solid var(--border);
+#screen_container{
+    background:#000;
+    width:100%;
+    min-height:420px;
+    overflow:auto;
+    outline:none;
+    cursor:default;
+    touch-action:manipulation;
 }
 
-.traffic {
-    width: 9px;
-    height: 9px;
-    border-radius: 50%;
+#screen_container div{
+    white-space:pre;
+    font:14px monospace;
+    line-height:14px;
 }
 
-.traffic:nth-child(1) { background: #ff6159; }
-.traffic:nth-child(2) { background: #ffbd44; }
-.traffic:nth-child(3) { background: #35c978; }
-
-.terminal-name {
-    margin-left: 9px;
-    font: 11px monospace;
-    color: #9da9b9;
+#screen_container canvas{
+    max-width:100%;
+    height:auto;
 }
 
-#terminal {
-    width: 100%;
-    height: 460px;
-    padding: 12px;
-    background: #000;
+.info{
+    color:var(--muted);
+    font:11px monospace;
+    margin:12px 1px;
+    overflow-wrap:anywhere;
+    min-height:18px;
 }
 
-.xterm {
-    height: 100%;
+.grid{
+    display:grid;
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:12px;
 }
 
-.xterm-viewport {
-    background: #000 !important;
+.card{
+    background:var(--panel);
+    border:1px solid var(--border);
+    border-radius:10px;
+    padding:16px;
+    min-width:0;
 }
 
-.info {
-    color: var(--muted);
-    font: 11px monospace;
-    margin-top: 12px;
-    min-height: 20px;
-    overflow-wrap: anywhere;
+.card h3{
+    font-size:13px;
+    margin:0 0 8px;
 }
 
-.controls {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 12px;
-    margin-top: 20px;
+.card p{
+    color:var(--muted);
+    font-size:11px;
+    line-height:1.7;
 }
 
-.card {
-    padding: 17px;
-    background: var(--panel);
-    border: 1px solid var(--border);
-    border-radius: 11px;
+.file-label,button,select{
+    width:100%;
+    min-height:42px;
+    padding:10px;
+    border-radius:7px;
+    font-size:12px;
 }
 
-.card h3 {
-    font-size: 13px;
-    margin: 0 0 8px;
+.file-label{
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    cursor:pointer;
+    background:#28374a;
+    color:#edf4ff;
+    font-weight:700;
+    border:0;
 }
 
-.card p {
-    font-size: 11px;
-    line-height: 1.7;
-    color: var(--muted);
-    margin: 0 0 14px;
+button{
+    border:0;
+    background:var(--green);
+    color:#07140e;
+    font-weight:750;
+    cursor:pointer;
 }
 
-button, .file-label {
-    display: flex;
-    width: 100%;
-    height: 42px;
-    justify-content: center;
-    align-items: center;
-    border: 0;
-    border-radius: 7px;
-    background: var(--green);
-    color: #07160f;
-    font-size: 12px;
-    font-weight: 750;
-    cursor: pointer;
+button.secondary{
+    background:#28374a;
+    color:#edf4ff;
 }
 
-.restore {
-    background: #273548;
-    color: white;
+button:disabled{
+    opacity:.35;
+    cursor:not-allowed;
 }
 
-button:disabled, .file-label.disabled {
-    opacity: .4;
-    pointer-events: none;
+input[type=file]{display:none}
+
+select{
+    background:#0d131c;
+    color:var(--text);
+    border:1px solid var(--border);
 }
 
-input[type=file] {
-    display: none;
+.selected-file{
+    margin-top:8px;
+    color:var(--green);
+    font:11px monospace;
+    overflow-wrap:anywhere;
 }
 
-.notice {
-    padding: 14px;
-    margin-top: 17px;
-    border: 1px solid var(--border);
-    border-radius: 9px;
-    background: #111720;
-    color: var(--muted);
-    font-size: 11px;
-    line-height: 1.9;
+.actions{
+    display:grid;
+    grid-template-columns:repeat(3,minmax(0,1fr));
+    gap:12px;
+    margin-top:16px;
 }
 
-.notice strong {
-    color: var(--text);
+.notice{
+    margin-top:16px;
+    padding:14px;
+    background:#111720;
+    border:1px solid var(--border);
+    border-radius:9px;
+    color:var(--muted);
+    font-size:11px;
+    line-height:1.9;
 }
 
-footer {
-    padding: 24px;
-    text-align: center;
-    color: #596579;
-    font-size: 10px;
+.notice strong{color:var(--text)}
+
+footer{
+    padding:23px;
+    text-align:center;
+    color:#596579;
+    font-size:10px;
 }
 
-@media(max-width: 600px) {
-    header { padding: 0 14px; }
-    main { padding: 18px 11px; }
-    .controls { grid-template-columns: 1fr; }
-    #terminal { height: 55vh; min-height: 330px; }
+@media(max-width:650px){
+    header{padding:0 13px}
+    main{padding:16px 10px}
+    .grid,.actions{grid-template-columns:1fr}
+    #screen_container{min-height:340px}
 }
 </style>
 </head>
@@ -256,73 +265,159 @@ footer {
 <body>
 
 <header>
-    <div class="brand">
-        <div class="logo">&gt;_</div>
-        WebLinux
-    </div>
-    <div class="version">V86 / BUILDROOT / X86</div>
+    <div class="brand">Web<span>Linux</span></div>
+    <div class="version">V86 / X86 VIRTUAL MACHINE</div>
 </header>
 
 <main>
 
-    <div class="topbar">
-        <h2>Linux Virtual Machine</h2>
-        <div class="status">
-            <span class="dot" id="statusDot"></span>
-            <span id="statusText">INITIALIZING</span>
+<div class="top">
+    <h2>Virtual Machine</h2>
+    <div class="status">
+        <span class="dot" id="dot"></span>
+        <span id="status">WAITING FOR ISO</span>
+    </div>
+</div>
+
+<div class="terminal">
+    <div class="terminal-head">
+        <span class="traffic"></span>
+        <span class="traffic"></span>
+        <span class="traffic"></span>
+        <span class="terminal-title">WebLinux Console</span>
+    </div>
+
+    <div id="screen_container" tabindex="0">
+        <div></div>
+        <canvas style="display:none"></canvas>
+    </div>
+</div>
+
+<div class="info" id="message">
+    OSイメージを選択してください。
+</div>
+
+<div class="grid">
+
+    <div class="card">
+        <h3>Boot Media / OS ISO</h3>
+        <p>
+            起動するOSのISOファイルを選択してください。
+            Debian、Linuxディストリビューションなどの
+            BIOS起動可能な32bit x86 ISOに対応します。
+        </p>
+
+        <label class="file-label" for="isoInput">
+            ＋ OSイメージを選択 (.iso)
+        </label>
+
+        <input
+            type="file"
+            id="isoInput"
+            accept=".iso,application/x-iso9660-image"
+        >
+
+        <div class="selected-file" id="isoName">
+            No ISO selected
         </div>
     </div>
 
-    <div class="terminal-box">
-        <div class="terminal-header">
-            <span class="traffic"></span>
-            <span class="traffic"></span>
-            <span class="traffic"></span>
-            <span class="terminal-name">root@weblinux: ~</span>
+    <div class="card">
+        <h3>Hard Disk / Optional</h3>
+        <p>
+            追加の仮想HDDイメージを選択できます。
+            OSインストール先や追加ストレージとして使用します。
+            生のRAW形式のイメージに対応します。
+        </p>
+
+        <label class="file-label" for="diskInput">
+            ＋ HDDイメージを選択 (.img)
+        </label>
+
+        <input
+            type="file"
+            id="diskInput"
+            accept=".img,.raw,.bin"
+        >
+
+        <div class="selected-file" id="diskName">
+            No HDD selected
         </div>
-        <div id="terminal"></div>
     </div>
 
-    <div class="info" id="message">
-        Initializing v86 engine...
-    </div>
+</div>
 
-    <div class="controls">
+<div class="card" style="margin-top:12px">
+    <h3>Virtual Hardware</h3>
 
-        <div class="card">
-            <h3>Save Session</h3>
-            <p>
-                CPU・メモリ・デバイス・ターミナル表示を保存します。
-                linux_session.bin としてダウンロードします。
-            </p>
-            <button id="saveButton" disabled>
-                ↓ 現在の状態を保存
-            </button>
+    <div class="grid">
+
+        <div>
+            <p>Memory Size</p>
+            <select id="ram">
+                <option value="134217728">128 MB</option>
+                <option value="268435456" selected>256 MB</option>
+                <option value="536870912">512 MB</option>
+            </select>
         </div>
 
-        <div class="card">
-            <h3>Restore Session</h3>
-            <p>
-                過去に保存したスナップショットを読み込み、
-                保存時点の状態に戻します。
-            </p>
-            <label class="file-label restore disabled" id="restoreLabel"
-                   for="restoreInput">
-                ↑ 保存したファイルから再開
-            </label>
-            <input type="file" id="restoreInput" accept=".bin">
+        <div>
+            <p>Network Adapter</p>
+            <select id="nic">
+                <option value="virtio" selected>VirtIO</option>
+                <option value="ne2k">NE2000</option>
+            </select>
         </div>
 
     </div>
 
-    <div class="notice">
-        <strong>Session information</strong><br>
-        ・仮想マシンはブラウザ内で実行されます。<br>
-        ・ページをリロードすると、実行状態は失われます。<br>
-        ・保存した linux_session.bin から再開できます。<br>
-        ・復元には同じv86バージョンと同じ仮想マシン構成が必要です。<br>
-        ・Linuxは軽量なBuildrootベースの環境です。
+    <button id="startButton" style="margin-top:14px" disabled>
+        ▶ 選択したOSを起動
+    </button>
+</div>
+
+<div class="actions">
+
+    <div class="card">
+        <h3>Save State</h3>
+        <p>現在の仮想マシンの状態を保存します。</p>
+        <button id="saveButton" disabled>
+            ↓ 状態を保存
+        </button>
     </div>
+
+    <div class="card">
+        <h3>Restore State</h3>
+        <p>同じOSイメージで起動したVMの状態を復元します。</p>
+        <label class="file-label" for="restoreInput">
+            ↑ 状態ファイルを選択
+        </label>
+        <input type="file" id="restoreInput" accept=".bin">
+    </div>
+
+    <div class="card">
+        <h3>Power</h3>
+        <p>仮想マシンを停止します。</p>
+        <button class="secondary" id="stopButton" disabled>
+            ■ VMを停止
+        </button>
+    </div>
+
+</div>
+
+<div class="notice">
+    <strong>System Information</strong><br>
+    Engine: v86<br>
+    Boot: BIOS / CD-ROM / HDD<br>
+    Architecture: x86 32-bit<br>
+    Network: VirtIO / NE2000 + WebSocket relay<br>
+    <br>
+    ・ISOだけでもLive Linuxやインストーラーを起動できます。<br>
+    ・HDDイメージを接続するとインストール先として使えます。<br>
+    ・HDDの変更は元のローカルファイルには直接書き戻されません。<br>
+    ・状態復元時は保存時と同じISO、HDD、メモリ設定を使ってください。<br>
+    ・64bit専用OSは起動できません。<br>
+</div>
 
 </main>
 
@@ -333,397 +428,376 @@ footer {
 <script>
 "use strict";
 
-/* ==========================================
-   CONFIGURATION
-========================================== */
+/* =====================================
+   CONFIG
+===================================== */
 
-const CONFIG = {
-    wasm_path:
-        "https://cdn.jsdelivr.net/npm/v86@0.5.473/build/v86.wasm",
+const V86_BASE =
+    "https://cdn.jsdelivr.net/gh/copy/v86@master/";
 
-    memory_size: 64 * 1024 * 1024,
+const CONFIG_BASE = {
+    wasm_path: V86_BASE + "build/v86.wasm",
 
     bios: {
-        url: "https://cdn.jsdelivr.net/gh/copy/v86@master/bios/seabios.bin"
+        url: V86_BASE + "bios/seabios.bin"
     },
 
     vga_bios: {
-        url: "https://cdn.jsdelivr.net/gh/copy/v86@master/bios/vgabios.bin"
+        url: V86_BASE + "bios/vgabios.bin"
     },
 
-    bzimage: {
-        url: "https://static.simonwillison.net/static/cors-allow/2026/buildroot-bzimage68.bin",
-        async: false
+    memory_size: 256 * 1024 * 1024,
+    vga_memory_size: 8 * 1024 * 1024,
+
+    screen_container:
+        document.getElementById("screen_container"),
+
+    net_device: {
+        type: "virtio",
+        relay_url: "wss://relay.widgetry.org/"
     },
 
-    filesystem: {},
-
-    cmdline: "tsc=reliable mitigations=off random.trust_cpu=on",
-
-    disable_keyboard: true,
-
+    bootmenu: true,
     autostart: true
 };
 
-/* ==========================================
+/* =====================================
    STATE
-========================================== */
+===================================== */
 
 let emulator = null;
-let terminal = null;
-let fitAddon = null;
+let selectedISO = null;
+let selectedDisk = null;
 
-let loaded = false;
+let running = false;
 let busy = false;
-let restoring = false;
+let machineConfig = null;
 
-let terminalHistory = "";
+const $ = id => document.getElementById(id);
 
-const MAX_HISTORY = 512 * 1024;
-const SNAP_MAGIC = "WEB86S01";
-
-const encoder = new TextEncoder();
-
-/* ==========================================
+/* =====================================
    UI
-========================================== */
+===================================== */
 
-const saveButton = document.getElementById("saveButton");
-const restoreInput = document.getElementById("restoreInput");
-const restoreLabel = document.getElementById("restoreLabel");
+function setStatus(value,type="normal"){
+    $("status").textContent = value;
+    $("dot").className = "dot";
 
-const statusDot = document.getElementById("statusDot");
-const statusText = document.getElementById("statusText");
-const message = document.getElementById("message");
-
-function status(text, type = "normal") {
-    statusText.textContent = text;
-    statusDot.className = "dot";
-
-    if (type === "running") {
-        statusDot.classList.add("running");
+    if(type === "running"){
+        $("dot").classList.add("running");
     }
 
-    if (type === "error") {
-        statusDot.classList.add("error");
+    if(type === "error"){
+        $("dot").classList.add("err");
     }
 }
 
-function info(text) {
-    message.textContent = text;
+function setMessage(value){
+    $("message").textContent = value;
 }
 
-function setBusy(value) {
+function updateButtons(){
+    $("startButton").disabled =
+        !selectedISO || busy;
+
+    $("saveButton").disabled =
+        !running || busy;
+
+    $("restoreInput").disabled =
+        !running || busy;
+
+    $("stopButton").disabled =
+        !emulator || busy;
+}
+
+function setBusy(value){
     busy = value;
-    saveButton.disabled = value || !loaded;
-    restoreInput.disabled = value;
-
-    restoreLabel.classList.toggle("disabled", value || !loaded);
+    updateButtons();
 }
 
-/* ==========================================
-   TERMINAL
-========================================== */
+/* =====================================
+   FILE INPUT
+===================================== */
 
-function initializeTerminal() {
-    if (!window.Terminal || !window.FitAddon) {
-        throw new Error("xterm.js failed to load.");
-    }
+$("isoInput").addEventListener("change",event=>{
+    selectedISO = event.target.files[0] || null;
 
-    terminal = new Terminal({
-        cursorBlink: true,
-        convertEol: true,
-        scrollback: 3000,
-        fontSize: 13,
-        fontFamily:
-            '"SFMono-Regular", Consolas, "Liberation Mono", monospace',
+    $("isoName").textContent = selectedISO
+        ? selectedISO.name + " (" +
+          (selectedISO.size/1048576).toFixed(1) + " MB)"
+        : "No ISO selected";
 
-        theme: {
-            background: "#000000",
-            foreground: "#d8fce7",
-            cursor: "#38d99b",
-            selectionBackground: "#245b44"
-        }
-    });
+    updateButtons();
 
-    fitAddon = new FitAddon.FitAddon();
-
-    terminal.loadAddon(fitAddon);
-
-    terminal.open(document.getElementById("terminal"));
-
-    fitAddon.fit();
-
-    terminal.onData(function(data) {
-        if (!emulator || !loaded || busy || restoring) {
-            return;
-        }
-
-        try {
-            emulator.serial0_send(data);
-        } catch (e) {
-            console.error("Terminal input error:", e);
-        }
-    });
-
-    terminal.onResize(function(size) {
-        // The guest is a serial-console system.
-        // No VGA keyboard or mouse is required.
-    });
-
-    window.addEventListener("resize", function() {
-        try {
-            fitAddon.fit();
-        } catch (e) {}
-    });
-
-    terminal.focus();
-}
-
-function recordTerminalByte(byte) {
-    terminalHistory += String.fromCharCode(byte);
-
-    if (terminalHistory.length > MAX_HISTORY) {
-        const excess = terminalHistory.length - MAX_HISTORY;
-        const newline = terminalHistory.indexOf("\n", excess);
-
-        terminalHistory = terminalHistory.slice(
-            newline >= 0 ? newline + 1 : excess
+    if(selectedISO){
+        setMessage(
+            "Selected OS: " + selectedISO.name +
+            ". Press Start to boot."
         );
     }
-}
+});
 
-function latin1ToBytes(str) {
-    const result = new Uint8Array(str.length);
+$("diskInput").addEventListener("change",event=>{
+    selectedDisk = event.target.files[0] || null;
 
-    for (let i = 0; i < str.length; i++) {
-        result[i] = str.charCodeAt(i) & 255;
-    }
+    $("diskName").textContent = selectedDisk
+        ? selectedDisk.name + " (" +
+          (selectedDisk.size/1048576).toFixed(1) + " MB)"
+        : "No HDD selected";
+});
 
-    return result;
-}
+/* =====================================
+   DESTROY CURRENT VM
+===================================== */
 
-function bytesToLatin1(bytes) {
-    let output = "";
+async function destroyVM(){
+    if(!emulator) return;
 
-    for (let i = 0; i < bytes.length; i += 8192) {
-        output += String.fromCharCode(
-            ...bytes.subarray(i, i + 8192)
-        );
-    }
+    const old = emulator;
 
-    return output;
-}
+    emulator = null;
+    running = false;
 
-function restoreTerminalHistory(bytes) {
-    terminalHistory = bytesToLatin1(bytes);
-
-    terminal.reset();
-
-    if (bytes.length) {
-        terminal.write(bytes);
-    }
-}
-
-/* ==========================================
-   VM INITIALIZATION
-========================================== */
-
-function initializeVM() {
-    return new Promise(function(resolve, reject) {
-        try {
-            const V86Constructor = window.V86 || window.V86Starter;
-
-            if (!V86Constructor) {
-                throw new Error("v86 library is unavailable.");
-            }
-
-            loaded = false;
-            status("INITIALIZING");
-            info("Downloading v86 WebAssembly and BIOS...");
-
-            emulator = new V86Constructor(CONFIG);
-
-            emulator.add_listener("download-progress", function(event) {
-                const name = event.file_name || "VM resource";
-
-                let progress = "";
-
-                if (event.lengthComputable && event.total > 0) {
-                    progress =
-                        " " +
-                        Math.round(event.loaded / event.total * 100) +
-                        "%";
-                }
-
-                info("Downloading: " + name + progress);
-            });
-
-            emulator.add_listener("download-error", function(event) {
-                const req = event && event.request;
-                const httpStatus = req && req.status;
-
-                const reason = httpStatus
-                    ? "HTTP " + httpStatus
-                    : "Network / CORS error";
-
-                status("DOWNLOAD ERROR", "error");
-
-                info(
-                    "Resource download failed: " +
-                    (event.file_name || "unknown") +
-                    " (" + reason + ")"
-                );
-            });
-
-            emulator.add_listener("serial0-output-byte", function(byte) {
-                const value = byte & 255;
-
-                recordTerminalByte(value);
-
-                terminal.write(Uint8Array.of(value));
-            });
-
-            emulator.add_listener("emulator-loaded", function() {
-                loaded = true;
-
-                status("RUNNING", "running");
-                info("Linux booted. Terminal is ready.");
-
-                setBusy(false);
-                terminal.focus();
-
-                resolve(emulator);
-            });
-
-            emulator.add_listener("emulator-stopped", function() {
-                if (!restoring) {
-                    status("STOPPED");
-                }
-            });
-
-            setTimeout(function() {
-                if (!loaded && emulator) {
-                    status("BOOT TIMEOUT", "error");
-
-                    info(
-                        "Boot is taking too long. Check browser console, " +
-                        "CORS permissions and network access."
-                    );
-                }
-            }, 90000);
-
-        } catch (error) {
-            reject(error);
+    try{
+        if(old.is_running()){
+            await old.stop();
         }
-    });
+    }catch(e){
+        console.warn("Stop warning:",e);
+    }
+
+    try{
+        await old.destroy();
+    }catch(e){
+        console.warn("Destroy warning:",e);
+    }
 }
 
-/* ==========================================
-   SNAPSHOT FORMAT
+/* =====================================
+   START VM FROM FILES
+===================================== */
 
-   8 bytes: Magic
-   4 bytes: Terminal history length (LE)
-   N bytes: Terminal history (raw bytes)
-   Rest:    v86 save_state() binary
+async function startVM(){
 
-========================================== */
-
-function createSnapshot(vmBuffer) {
-    const history = latin1ToBytes(terminalHistory);
-    const vmState = new Uint8Array(vmBuffer);
-
-    const HEADER_SIZE = 12;
-
-    const result = new Uint8Array(
-        HEADER_SIZE + history.length + vmState.length
-    );
-
-    for (let i = 0; i < SNAP_MAGIC.length; i++) {
-        result[i] = SNAP_MAGIC.charCodeAt(i);
+    if(!selectedISO){
+        throw new Error("Please select an ISO file.");
     }
 
-    new DataView(result.buffer).setUint32(
-        8,
-        history.length,
-        true
-    );
-
-    result.set(history, HEADER_SIZE);
-
-    result.set(
-        vmState,
-        HEADER_SIZE + history.length
-    );
-
-    return result;
-}
-
-function parseSnapshot(buffer) {
-    const bytes = new Uint8Array(buffer);
-
-    const magic = String.fromCharCode(
-        ...bytes.subarray(0, 8)
-    );
-
-    if (magic !== SNAP_MAGIC) {
-        // Backward compatibility:
-        // Accept a raw v86 save_state() file too.
-        return {
-            state: buffer,
-            history: null
-        };
+    if(typeof V86 !== "function"){
+        throw new Error("v86 core script could not be loaded.");
     }
 
-    if (bytes.length < 13) {
-        throw new Error("Snapshot file is incomplete.");
-    }
+    setBusy(true);
 
-    const historyLength = new DataView(
-        bytes.buffer,
-        bytes.byteOffset,
-        bytes.byteLength
-    ).getUint32(8, true);
+    running = false;
 
-    const stateOffset = 12 + historyLength;
+    setStatus("DESTROYING OLD VM");
+    setMessage("Preparing virtual hardware...");
 
-    if (
-        stateOffset >= bytes.length ||
-        historyLength > MAX_HISTORY
-    ) {
-        throw new Error("Invalid snapshot structure.");
-    }
+    await destroyVM();
 
-    const history = bytes.slice(12, stateOffset);
+    const isISO =
+        /\.iso$/i.test(selectedISO.name);
 
-    const state = bytes.slice(stateOffset).buffer;
+    const memorySize =
+        Number($("ram").value);
 
-    return {
-        state,
-        history
+    const nicType =
+        $("nic").value;
+
+    const config = {
+        ...CONFIG_BASE,
+
+        memory_size: memorySize,
+
+        net_device: {
+            type: nicType,
+            relay_url: "wss://relay.widgetry.org/"
+        }
     };
+
+    if(isISO){
+
+        config.cdrom = {
+            buffer: selectedISO
+        };
+
+        config.boot_order = 0x123;
+
+        if(selectedDisk){
+            config.hda = {
+                buffer: selectedDisk
+            };
+        }
+
+    }else{
+
+        /*
+         * Non-ISO file is treated as a raw boot disk.
+         */
+        config.hda = {
+            buffer: selectedISO
+        };
+
+        config.boot_order = 0x132;
+
+        if(selectedDisk){
+            config.hdb = {
+                buffer: selectedDisk
+            };
+        }
+    }
+
+    machineConfig = {
+        iso: selectedISO.name,
+        isoSize: selectedISO.size,
+        isoModified: selectedISO.lastModified,
+
+        disk: selectedDisk?.name || null,
+        diskSize: selectedDisk?.size || null,
+        diskModified: selectedDisk?.lastModified || null,
+
+        memorySize,
+        nicType
+    };
+
+    $("screen_container").focus();
+
+    setStatus("INITIALIZING");
+    setMessage("Loading BIOS, WebAssembly and selected OS image...");
+
+    const instance = new V86(config);
+
+    emulator = instance;
+
+    return new Promise((resolve,reject)=>{
+
+        let finished = false;
+
+        const timeout = setTimeout(()=>{
+            if(!finished){
+                finished = true;
+
+                reject(new Error(
+                    "VM startup timeout. Check network and BIOS resources."
+                ));
+            }
+        },180000);
+
+        instance.add_listener("download-progress",event=>{
+
+            const percentage =
+                event.lengthComputable && event.total
+                ? Math.round(event.loaded/event.total*100)+"%"
+                : "";
+
+            setMessage(
+                "Downloading "+event.file_name+" "+percentage
+            );
+        });
+
+        instance.add_listener("download-error",event=>{
+
+            console.error("Download error:",event);
+
+            setStatus("DOWNLOAD ERROR","error");
+
+            setMessage(
+                "Failed to load: "+
+                (event.file_name || "unknown resource")
+            );
+
+            if(!finished){
+                finished = true;
+                clearTimeout(timeout);
+                reject(new Error(
+                    "Could not load "+(event.file_name || "VM resource")
+                ));
+            }
+        });
+
+        instance.add_listener("emulator-ready",()=>{
+            setMessage(
+                "Virtual hardware initialized. Starting OS..."
+            );
+        });
+
+        instance.add_listener("emulator-started",()=>{
+
+            running = true;
+
+            setStatus("RUNNING","running");
+
+            setMessage(
+                "VM started. Waiting for the operating system boot..."
+            );
+
+            updateButtons();
+
+            if(!finished){
+                finished = true;
+                clearTimeout(timeout);
+                resolve();
+            }
+        });
+
+        instance.add_listener("emulator-stopped",()=>{
+
+            running = false;
+
+            if(emulator === instance){
+                setStatus("STOPPED");
+                updateButtons();
+            }
+        });
+
+    });
 }
 
-/* ==========================================
-   SAVE
-========================================== */
+/* =====================================
+   START BUTTON
+===================================== */
 
-saveButton.addEventListener("click", async function() {
-    if (!emulator || !loaded || busy) return;
+$("startButton").addEventListener("click",async()=>{
 
-    try {
+    try{
+        setStatus("STARTING");
+        await startVM();
+
+    }catch(error){
+
+        console.error(error);
+
+        setStatus("START ERROR","error");
+        setMessage(error.message);
+
+        await destroyVM();
+
+    }finally{
+        setBusy(false);
+    }
+});
+
+/* =====================================
+   SAVE STATE
+===================================== */
+
+$("saveButton").addEventListener("click",async()=>{
+
+    if(!emulator || !running || busy) return;
+
+    try{
+
         setBusy(true);
 
-        status("SAVING");
-        info("Capturing complete virtual machine state...");
+        setStatus("SAVING");
+        setMessage("Capturing complete VM state...");
 
-        const vmBuffer = await emulator.save_state();
-
-        const snapshot = createSnapshot(vmBuffer);
+        const state = await emulator.save_state();
 
         const blob = new Blob(
-            [snapshot],
-            { type: "application/octet-stream" }
+            [state],
+            {type:"application/octet-stream"}
         );
 
         const url = URL.createObjectURL(blob);
@@ -737,115 +811,146 @@ saveButton.addEventListener("click", async function() {
         link.click();
         link.remove();
 
-        setTimeout(function() {
+        setTimeout(()=>{
             URL.revokeObjectURL(url);
-        }, 30000);
+        },30000);
 
-        status("RUNNING", "running");
+        setStatus("RUNNING","running");
 
-        info(
-            "Snapshot saved: " +
-            (snapshot.length / 1048576).toFixed(2) +
-            " MB"
+        setMessage(
+            "Saved successfully: "+
+            (state.byteLength/1048576).toFixed(2)+" MB"
         );
 
-    } catch (error) {
+    }catch(error){
+
         console.error(error);
 
-        status("SAVE ERROR", "error");
-        info(error.message);
+        setStatus("SAVE ERROR","error");
+        setMessage(error.message);
 
-    } finally {
+    }finally{
         setBusy(false);
     }
 });
 
-/* ==========================================
-   RESTORE
-========================================== */
+/* =====================================
+   RESTORE STATE
+===================================== */
 
-restoreInput.addEventListener("change", async function(event) {
+$("restoreInput").addEventListener("change",async event=>{
+
     const file = event.target.files?.[0];
 
-    if (!file || !emulator || !loaded || busy) {
+    if(!file) return;
+
+    if(!emulator || !running || !machineConfig){
+        setMessage(
+            "先に保存時と同じOSイメージ・HDD・設定でVMを起動してください。"
+        );
+
+        event.target.value="";
         return;
     }
 
-    try {
+    try{
+
         setBusy(true);
-        restoring = true;
 
-        status("READING SNAPSHOT");
-        info("Reading " + file.name + "...");
+        setStatus("READING STATE");
+        setMessage("Reading "+file.name+"...");
 
-        const fileBuffer = await file.arrayBuffer();
+        const buffer = await file.arrayBuffer();
 
-        const snapshot = parseSnapshot(fileBuffer);
-
-        if (!snapshot.state || snapshot.state.byteLength === 0) {
-            throw new Error("Empty VM state.");
+        if(buffer.byteLength===0){
+            throw new Error("Empty state file.");
         }
 
-        status("STOPPING VM");
-        info("Stopping current virtual machine...");
+        setStatus("RESTORING");
+        setMessage("Stopping current VM...");
 
         await emulator.stop();
 
-        status("RESTORING");
-        info("Restoring CPU, RAM and virtual devices...");
+        setMessage("Restoring CPU, RAM and devices...");
 
-        await emulator.restore_state(snapshot.state);
+        await emulator.restore_state(buffer);
 
-        if (snapshot.history !== null) {
-            restoreTerminalHistory(snapshot.history);
-        }
+        await emulator.run();
 
-        info("Restarting restored VM...");
+        running = true;
 
-        emulator.run();
+        setStatus("RUNNING","running");
 
-        status("RUNNING", "running");
+        setMessage("Session restored successfully.");
 
-        info("Session restored successfully.");
+    }catch(error){
 
-        terminal.focus();
+        console.error(error);
 
-    } catch (error) {
-        console.error("Restore error:", error);
+        setStatus("RESTORE ERROR","error");
+        setMessage(error.message);
 
-        status("RESTORE ERROR", "error");
-        info("Restore failed: " + error.message);
+    }finally{
 
-    } finally {
-        restoring = false;
-        restoreInput.value = "";
+        event.target.value="";
+
         setBusy(false);
     }
 });
 
-/* ==========================================
-   STARTUP
-========================================== */
+/* =====================================
+   STOP VM
+===================================== */
 
-window.addEventListener("DOMContentLoaded", async function() {
-    try {
-        initializeTerminal();
+$("stopButton").addEventListener("click",async()=>{
 
-        info("Initializing virtual machine...");
+    if(!emulator || busy) return;
 
-        await initializeVM();
+    try{
 
-    } catch (error) {
-        console.error("Initialization error:", error);
+        setBusy(true);
 
-        status("INITIALIZATION ERROR", "error");
-        info(error.message);
+        await destroyVM();
 
+        setStatus("STOPPED");
+        setMessage("Virtual machine stopped.");
+
+    }catch(error){
+
+        setStatus("STOP ERROR","error");
+        setMessage(error.message);
+
+    }finally{
         setBusy(false);
     }
+});
+
+/* =====================================
+   INITIALIZATION
+===================================== */
+
+window.addEventListener("DOMContentLoaded",()=>{
+
+    if(typeof V86!=="function"){
+
+        setStatus("ENGINE ERROR","error");
+
+        setMessage(
+            "v86 library failed to load. Check CDN connectivity."
+        );
+
+        return;
+    }
+
+    setStatus("WAITING FOR ISO");
+
+    setMessage(
+        "OS ISOを選択して「選択したOSを起動」を押してください。"
+    );
+
+    updateButtons();
 });
 
 </script>
-
 </body>
 </html>
