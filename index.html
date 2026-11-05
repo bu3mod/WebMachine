@@ -3,66 +3,763 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>JavaScript Diagnostic</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#101116">
+<title>Browser PC · v86</title>
+
 <style>
+:root {
+  color-scheme: dark;
+  --bg: #101116;
+  --panel: #191b23;
+  --border: #30333e;
+  --text: #f3f4f8;
+  --muted: #9298a8;
+  --accent: #8b9cff;
+  --green: #68dba0;
+  --red: #ff7777;
+}
+* { box-sizing: border-box; }
 body {
-  background: #101114;
-  color: white;
-  font-family: sans-serif;
-  padding: 24px;
+  margin: 0;
+  padding: 20px;
+  background: var(--bg);
+  color: var(--text);
+  font-family: system-ui, -apple-system, sans-serif;
+}
+main {
+  max-width: 1000px;
+  margin: auto;
+}
+header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 22px;
+}
+h1 {
+  margin: 0;
+  font-size: 23px;
+  letter-spacing: -.5px;
+}
+.subtitle {
+  color: var(--muted);
+  font-size: 12px;
+  margin-top: 4px;
+}
+.status {
+  background: #252936;
+  border: 1px solid var(--border);
+  border-radius: 30px;
+  padding: 7px 12px;
+  font-size: 12px;
+  color: var(--accent);
+  white-space: nowrap;
+}
+.panel {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 15px;
+  padding: 17px;
+  margin-bottom: 15px;
+}
+.section-label {
+  font-size: 11px;
+  color: var(--muted);
+  letter-spacing: 1.3px;
+  font-weight: 700;
+  margin-bottom: 12px;
+}
+input[type=file] {
+  display: block;
+  width: 100%;
+  margin: 12px 0;
+  font-size: 13px;
+}
+.file-info {
+  color: var(--muted);
+  font-size: 12px;
+  overflow-wrap: anywhere;
+  margin-top: 10px;
 }
 button {
-  padding: 14px;
+  border: 1px solid var(--border);
+  background: #292d39;
+  color: var(--text);
+  border-radius: 9px;
+  padding: 11px 15px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+button.primary {
+  background: var(--accent);
+  color: #101323;
+  border-color: var(--accent);
+}
+button.danger {
+  color: #ffaaaa;
+}
+button:disabled {
+  opacity: .35;
+  cursor: not-allowed;
+}
+button:active { transform: scale(.98); }
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.screen-wrap {
+  background: #050609;
+  border: 1px solid #343744;
+  border-radius: 12px;
+  padding: 8px;
+  overflow: auto;
+  min-height: 240px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+}
+#screen_container {
+  width: 100%;
+  min-height: 220px;
+  outline: none;
+  overflow: hidden;
+}
+#screen_container > div {
+  white-space: pre;
+  font-family: monospace;
+  font-size: 14px;
+  line-height: 14px;
+  color: white;
+  overflow: hidden;
+}
+#screen_container canvas {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  margin: auto;
+}
+.console {
+  background: #090a0e;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px;
+  height: 160px;
+  overflow: auto;
+  font: 11px/1.6 monospace;
+  color: #b9c1d5;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.good { color: var(--green); }
+.bad { color: var(--red); }
+.keyboard {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
   margin-top: 12px;
 }
-#status {
-  color: #70e0a0;
-  font-weight: bold;
+.keyboard button {
+  min-width: 48px;
+  padding: 10px;
+}
+.text-entry {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+}
+.text-entry input {
+  min-width: 0;
+  flex: 1;
+  background: #0b0c11;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: white;
+  padding: 10px;
+}
+small {
+  color: var(--muted);
+  line-height: 1.5;
+}
+@media(max-width:600px) {
+  body { padding: 12px; }
+  h1 { font-size: 20px; }
+  .panel { padding: 13px; }
+  .screen-wrap { min-height: 200px; }
+  .text-entry { flex-direction: column; }
 }
 </style>
 </head>
+
 <body>
+<main>
 
-<h2>JavaScript Diagnostic</h2>
-<p id="status">JavaScript: starting...</p>
+<header>
+  <div>
+    <h1>Browser PC</h1>
+    <div class="subtitle">x86 Virtual Machine · Powered by v86</div>
+  </div>
+  <div class="status" id="status">JavaScript starting...</div>
+</header>
 
-<input id="iso" type="file" accept=".iso">
+<section class="panel">
+  <div class="section-label">01 / ISO IMAGE</div>
 
-<p id="filename">No ISO selected</p>
+  <strong>Select operating system ISO</strong>
 
-<button id="test">JavaScript Test</button>
+  <input
+    type="file"
+    id="isoInput"
+    accept=".iso,application/octet-stream,*/*"
+  >
+
+  <div class="file-info" id="fileInfo">
+    No ISO selected
+  </div>
+
+  <div class="actions" style="margin-top:15px">
+    <button class="primary" id="startBtn" disabled>
+      Start Virtual Machine
+    </button>
+  </div>
+
+  <small>
+    The ISO is read locally in your browser. It is not uploaded to a server.
+  </small>
+</section>
+
+<section class="panel">
+  <div class="section-label">02 / VIRTUAL MACHINE</div>
+
+  <div class="actions">
+    <button id="pauseBtn" disabled>Pause</button>
+    <button id="resumeBtn" disabled>Resume</button>
+    <button id="restartBtn" disabled>Restart</button>
+    <button id="stopBtn" class="danger" disabled>Stop</button>
+  </div>
+
+  <div class="screen-wrap" style="margin-top:15px">
+    <div id="screen_container" tabindex="0">
+      <div>Virtual machine display will appear here.</div>
+      <canvas style="display:none"></canvas>
+    </div>
+  </div>
+
+  <div class="keyboard">
+    <button data-key="ESC">Esc</button>
+    <button data-key="TAB">Tab</button>
+    <button data-key="ENTER">Enter</button>
+    <button data-key="UP">↑</button>
+    <button data-key="DOWN">↓</button>
+    <button data-key="LEFT">←</button>
+    <button data-key="RIGHT">→</button>
+  </div>
+
+  <div class="text-entry">
+    <input id="keyboardText" type="text" placeholder="Send text to virtual machine">
+    <button id="sendTextBtn" disabled>Send</button>
+  </div>
+</section>
+
+<section class="panel">
+  <div class="section-label">03 / STATE MANAGEMENT</div>
+
+  <div class="actions">
+    <button id="saveBtn" disabled>Save VM State</button>
+    <button id="loadBtn" disabled>Load VM State</button>
+    <input type="file" id="stateInput" accept=".bin,.state" hidden>
+  </div>
+
+  <small>
+    VM state can be exported as a file and restored later.
+  </small>
+</section>
+
+<section class="panel">
+  <div class="section-label">04 / SYSTEM LOG</div>
+  <div class="console" id="console"></div>
+</section>
+
+</main>
 
 <script>
+"use strict";
+
 (function () {
-  "use strict";
 
-  const status = document.getElementById("status");
-  const iso = document.getElementById("iso");
-  const filename = document.getElementById("filename");
-  const test = document.getElementById("test");
+  const $ = id => document.getElementById(id);
 
-  status.textContent = "JavaScript: RUNNING";
+  const status = $("status");
+  const isoInput = $("isoInput");
+  const fileInfo = $("fileInfo");
+  const startBtn = $("startBtn");
+  const consoleBox = $("console");
 
-  test.addEventListener("click", function () {
-    status.textContent = "JavaScript: BUTTON WORKS";
+  let selectedISO = null;
+  let emulator = null;
+  let starting = false;
+
+  function setStatus(message, isError = false) {
+    status.textContent = message;
+    status.style.color = isError ? "#ff7777" : "#8b9cff";
+  }
+
+  function log(message, type = "normal") {
+    const line = document.createElement("div");
+    line.textContent = new Date().toLocaleTimeString() + "  " + message;
+
+    if (type === "good") line.className = "good";
+    if (type === "bad") line.className = "bad";
+
+    consoleBox.appendChild(line);
+    consoleBox.scrollTop = consoleBox.scrollHeight;
+  }
+
+  function updateButtons() {
+    const hasVM = !!emulator;
+
+    $("pauseBtn").disabled = !hasVM;
+    $("resumeBtn").disabled = !hasVM;
+    $("restartBtn").disabled = !hasVM;
+    $("stopBtn").disabled = !hasVM;
+    $("saveBtn").disabled = !hasVM;
+    $("loadBtn").disabled = !hasVM;
+    $("sendTextBtn").disabled = !hasVM;
+  }
+
+  // JavaScript diagnostics
+  setStatus("JavaScript RUNNING");
+  log("JavaScript initialized.", "good");
+
+  window.addEventListener("error", event => {
+    log("JavaScript error: " + event.message, "bad");
+    setStatus("JavaScript error", true);
   });
 
-  iso.addEventListener("change", function () {
-    const file = iso.files && iso.files[0];
-
-    filename.textContent = file
-      ? "Selected: " + file.name + " (" + file.size + " bytes)"
-      : "No ISO selected";
+  window.addEventListener("unhandledrejection", event => {
+    log("Promise error: " + event.reason, "bad");
+    setStatus("Promise error", true);
   });
 
-  window.addEventListener("error", function (event) {
-    status.textContent = "ERROR: " + event.message;
+  // ISO file selection
+  isoInput.addEventListener("change", function () {
+    const file = this.files && this.files[0];
+
+    if (!file) {
+      selectedISO = null;
+      fileInfo.textContent = "No ISO selected";
+      startBtn.disabled = true;
+      return;
+    }
+
+    selectedISO = file;
+
+    fileInfo.textContent =
+      file.name + " · " +
+      (file.size / 1024 / 1024).toFixed(1) + " MB";
+
+    startBtn.disabled = false;
+
+    log("ISO selected: " + file.name, "good");
+    log("ISO size: " + file.size + " bytes");
+
+    setStatus("ISO READY");
   });
 
-  window.addEventListener("unhandledrejection", function (event) {
-    status.textContent = "PROMISE ERROR: " + event.reason;
+  // Load v86 library with fallback CDNs
+  async function loadV86() {
+
+    if (window.V86 || window.V86Starter) {
+      return {
+        Constructor: window.V86 || window.V86Starter,
+        base: "https://cdn.jsdelivr.net/npm/v86/"
+      };
+    }
+
+    const sources = [
+      {
+        script: "https://cdn.jsdelivr.net/npm/v86/build/libv86.js",
+        base: "https://cdn.jsdelivr.net/npm/v86/"
+      },
+      {
+        script: "https://unpkg.com/v86/build/libv86.js",
+        base: "https://unpkg.com/v86/"
+      }
+    ];
+
+    let lastError = null;
+
+    for (const source of sources) {
+      log("Loading v86: " + source.script);
+
+      try {
+        await new Promise((resolve, reject) => {
+          const script = document.createElement("script");
+
+          script.src = source.script;
+          script.async = true;
+          script.onload = resolve;
+          script.onerror = () => reject(
+            new Error("CDN script load failed")
+          );
+
+          document.head.appendChild(script);
+        });
+
+        const Constructor = window.V86 || window.V86Starter;
+
+        if (!Constructor) {
+          throw new Error("V86 constructor was not found");
+        }
+
+        log("v86 library loaded.", "good");
+
+        return {
+          Constructor,
+          base: source.base
+        };
+
+      } catch (error) {
+        lastError = error;
+        log("CDN failed: " + error.message, "bad");
+      }
+    }
+
+    throw lastError || new Error("Unable to load v86");
+  }
+
+  // Read local ISO using FileReader
+  function readISO(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+
+      reader.onprogress = event => {
+        if (event.lengthComputable) {
+          const percent = Math.round(
+            event.loaded / event.total * 100
+          );
+
+          setStatus("Reading ISO " + percent + "%");
+        }
+      };
+
+      reader.onload = () => resolve(reader.result);
+
+      reader.onerror = () => reject(
+        new Error("Failed to read ISO file")
+      );
+
+      reader.readAsArrayBuffer(file);
+    });
+  }
+
+  // Start virtual machine
+  async function startVM() {
+
+    if (starting) return;
+
+    if (!selectedISO) {
+      setStatus("Select an ISO first", true);
+      return;
+    }
+
+    starting = true;
+    startBtn.disabled = true;
+
+    try {
+
+      if (emulator) {
+        await emulator.destroy();
+        emulator = null;
+      }
+
+      $("screen_container").innerHTML =
+        '<div style="white-space:pre;font:14px monospace;color:white">Initializing virtual machine...</div><canvas style="display:none"></canvas>';
+
+      log("Reading ISO into memory...");
+      setStatus("Reading ISO...");
+
+      const isoBuffer = await readISO(selectedISO);
+
+      if (!(isoBuffer instanceof ArrayBuffer)) {
+        throw new Error("ISO was not converted to ArrayBuffer");
+      }
+
+      log(
+        "ISO loaded into memory: " +
+        isoBuffer.byteLength + " bytes",
+        "good"
+      );
+
+      setStatus("Loading v86 library...");
+
+      const loaded = await loadV86();
+      const V86Constructor = loaded.Constructor;
+      const assetBase = loaded.base;
+
+      log("Preparing virtual hardware...");
+      setStatus("Creating virtual machine...");
+
+      emulator = new V86Constructor({
+
+        wasm_path: assetBase + "build/v86.wasm",
+
+        memory_size: 256 * 1024 * 1024,
+        vga_memory_size: 8 * 1024 * 1024,
+
+        screen_container: $("screen_container"),
+
+        bios: {
+          url: "https://cdn.jsdelivr.net/gh/copy/v86@master/bios/seabios.bin"
+        },
+
+        vga_bios: {
+          url: "https://cdn.jsdelivr.net/gh/copy/v86@master/bios/vgabios.bin"
+        },
+
+        cdrom: {
+          buffer: isoBuffer
+        },
+
+        autostart: true,
+        disable_keyboard: false,
+        disable_mouse: false
+
+      });
+
+      emulator.add_listener("emulator-ready", () => {
+        log("Emulator is ready.", "good");
+        setStatus("EMULATOR READY");
+      });
+
+      emulator.add_listener("emulator-started", () => {
+        log("Virtual machine started.", "good");
+        setStatus("RUNNING");
+        updateButtons();
+      });
+
+      emulator.add_listener("emulator-stopped", () => {
+        log("Virtual machine stopped.");
+        setStatus("STOPPED");
+      });
+
+      emulator.add_listener("download-progress", event => {
+        if (event.lengthComputable && event.total > 0) {
+          const percent = Math.round(
+            event.loaded / event.total * 100
+          );
+
+          setStatus("Loading VM resources " + percent + "%");
+        }
+      });
+
+      emulator.add_listener("download-error", event => {
+        const name = event && event.file_name
+          ? event.file_name
+          : "unknown resource";
+
+        log("Resource download failed: " + name, "bad");
+        setStatus("Resource download error", true);
+      });
+
+      updateButtons();
+
+      log("v86 instance created.", "good");
+      setStatus("Initializing VM...");
+
+    } catch (error) {
+
+      log("START ERROR: " + (error.stack || error.message), "bad");
+      setStatus("START FAILED", true);
+
+      if (emulator) {
+        try {
+          await emulator.destroy();
+        } catch (_) {}
+        emulator = null;
+      }
+
+      updateButtons();
+
+    } finally {
+      starting = false;
+      startBtn.disabled = !selectedISO || !!emulator;
+    }
+  }
+
+  startBtn.addEventListener("click", startVM);
+
+  // Pause
+  $("pauseBtn").addEventListener("click", async () => {
+    if (!emulator) return;
+
+    try {
+      await emulator.stop();
+      setStatus("PAUSED");
+    } catch (error) {
+      log("Pause error: " + error.message, "bad");
+    }
   });
+
+  // Resume
+  $("resumeBtn").addEventListener("click", async () => {
+    if (!emulator) return;
+
+    try {
+      await emulator.run();
+      setStatus("RUNNING");
+    } catch (error) {
+      log("Resume error: " + error.message, "bad");
+    }
+  });
+
+  // Restart
+  $("restartBtn").addEventListener("click", () => {
+    if (!emulator) return;
+
+    try {
+      emulator.restart();
+      setStatus("RESTARTING");
+      log("Restart requested.");
+    } catch (error) {
+      log("Restart error: " + error.message, "bad");
+    }
+  });
+
+  // Stop and destroy
+  $("stopBtn").addEventListener("click", async () => {
+    if (!emulator) return;
+
+    try {
+      await emulator.destroy();
+      emulator = null;
+
+      $("screen_container").innerHTML =
+        '<div style="white-space:pre;font:14px monospace;color:white">Virtual machine stopped.</div><canvas style="display:none"></canvas>';
+
+      updateButtons();
+      startBtn.disabled = !selectedISO;
+
+      setStatus("STOPPED");
+      log("Emulator destroyed.");
+
+    } catch (error) {
+      log("Stop error: " + error.message, "bad");
+    }
+  });
+
+  // On-screen special keys
+  const specialKeys = {
+    ESC: [0x01],
+    TAB: [0x0F],
+    ENTER: [0x1C],
+    UP: [0xE0, 0x48],
+    DOWN: [0xE0, 0x50],
+    LEFT: [0xE0, 0x4B],
+    RIGHT: [0xE0, 0x4D]
+  };
+
+  document.querySelectorAll("[data-key]").forEach(button => {
+    button.addEventListener("click", () => {
+      if (!emulator) return;
+
+      const codes = specialKeys[button.dataset.key];
+
+      if (codes) {
+        emulator.keyboard_send_scancodes(codes);
+        $("screen_container").focus();
+      }
+    });
+  });
+
+  // Send text to VM
+  $("sendTextBtn").addEventListener("click", () => {
+    if (!emulator) return;
+
+    const input = $("keyboardText");
+    const value = input.value;
+
+    if (!value) return;
+
+    emulator.keyboard_send_text(value);
+    input.value = "";
+    $("screen_container").focus();
+  });
+
+  $("keyboardText").addEventListener("keydown", event => {
+    if (event.key === "Enter") {
+      $("sendTextBtn").click();
+    }
+  });
+
+  // Save VM state
+  $("saveBtn").addEventListener("click", async () => {
+    if (!emulator) return;
+
+    try {
+      setStatus("Saving state...");
+      log("Saving virtual machine state...");
+
+      const state = await emulator.save_state();
+
+      const blob = new Blob([state], {
+        type: "application/octet-stream"
+      });
+
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+
+      link.href = url;
+      link.download = "browser-vm-state.bin";
+      link.click();
+
+      setTimeout(() => URL.revokeObjectURL(url), 3000);
+
+      setStatus("STATE SAVED");
+      log("State saved: " + state.byteLength + " bytes", "good");
+
+    } catch (error) {
+      log("Save error: " + error.message, "bad");
+      setStatus("SAVE FAILED", true);
+    }
+  });
+
+  // Load VM state
+  $("loadBtn").addEventListener("click", () => {
+    if (!emulator) return;
+    $("stateInput").click();
+  });
+
+  $("stateInput").addEventListener("change", async event => {
+    const file = event.target.files && event.target.files[0];
+    if (!file || !emulator) return;
+
+    try {
+      setStatus("Loading state...");
+      await emulator.stop();
+
+      const buffer = await file.arrayBuffer();
+
+      await emulator.restore_state(buffer);
+      await emulator.run();
+
+      setStatus("STATE RESTORED");
+      log("VM state restored.", "good");
+
+    } catch (error) {
+      log("Restore error: " + error.message, "bad");
+      setStatus("RESTORE FAILED", true);
+
+    } finally {
+      event.target.value = "";
+    }
+  });
+
+  updateButtons();
+
 })();
 </script>
 
